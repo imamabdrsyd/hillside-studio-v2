@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hillside Studio Finance v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: { extend: { 
+                fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                colors: {
+                    earn: { light: '#dcfce7', DEFAULT: '#22c55e', dark: '#16a34a' },
+                    opex: { light: '#fee2e2', DEFAULT: '#ef4444', dark: '#dc2626' },
+                    varcat: { light: '#f3e8ff', DEFAULT: '#a855f7', dark: '#9333ea' },
+                    capex: { light: '#f3f4f6', DEFAULT: '#6b7280', dark: '#4b5563' },
+                    tax: { light: '#dbeafe', DEFAULT: '#3b82f6', dark: '#2563eb' },
+                    fin: { light: '#fae8ff', DEFAULT: '#d946ef', dark: '#c026d3' }
+                }
+            }}
+        }
+    </script>
+    <style>
+        [data-tab] { display: none; } [data-tab].active { display: block; animation: fadeIn .3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .toast { transform: translateY(100px); opacity: 0; } .toast.show { transform: translateY(0); opacity: 1; transition: all .3s; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="font-sans bg-slate-50 text-slate-800 min-h-screen flex">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-slate-200 p-5 flex flex-col fixed h-screen z-50">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-emerald-500/30">🏔️</div>
+            <div>
+                <h1 class="text-lg font-bold text-slate-800">Hillside Studio</h1>
+                <p class="text-[10px] text-slate-400 font-medium">Finance Management v2</p>
+            </div>
+        </div>
+        <nav class="flex-1 space-y-1">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Overview</p>
+            <button onclick="showTab('dashboard')" class="nav-btn active w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-emerald-50 text-emerald-600 border border-emerald-100">📊 Dashboard</button>
+            <button onclick="showTab('transactions')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50">📋 Transactions</button>
+            <button onclick="showTab('reports')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50">📈 Reports</button>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 mt-6">Financial Statements</p>
+            <button onclick="showTab('income')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50">💰 Income Statement</button>
+            <button onclick="showTab('balance')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50">⚖️ Balance Sheet</button>
+            <button onclick="showTab('cashflow')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50">💵 Cash Flow</button>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2 mt-6">Analysis</p>
+            <button onclick="showTab('forecast')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:bg-slate-50">🔮 ROI & Forecast</button>
+        </nav>
+        <div class="pt-4 border-t border-slate-200 space-y-2">
+            <div class="flex items-center gap-3 px-3 py-2">
+                <div class="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center font-bold text-emerald-600 text-sm">IM</div>
+                <div class="flex-1">
+                    <p class="text-sm font-semibold text-slate-700">Imam</p>
+                    <p class="text-[10px] text-slate-400">Superadmin</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 ml-64 min-h-screen">
+        <header class="bg-white/80 backdrop-blur-lg border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-40">
+            <div class="flex items-center gap-3 bg-slate-100 px-4 py-2.5 rounded-xl w-96">
+                <span class="text-slate-400">🔍</span>
+                <input type="text" id="searchInput" onkeyup="updateTables()" placeholder="Cari transaksi..." class="bg-transparent border-none outline-none text-sm w-full placeholder-slate-400">
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-sm text-slate-500">📅 <span id="currentDate"></span></span>
+                <button onclick="exportPDF()" class="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-semibold hover:bg-emerald-600 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20">📄 Export PDF</button>
+            </div>
+        </header>
+
+        <div class="p-8">
+            <!-- Dashboard -->
+            <div data-tab="dashboard" class="active">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-5 gap-4 mb-6">
+                    <div class="stat-card bg-white rounded-2xl p-5 shadow-sm border border-slate-100 transition-all">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-slate-400 uppercase">Revenue</span>
+                            <span class="w-8 h-8 bg-earn-light rounded-lg flex items-center justify-center text-earn">💰</span>
+                        </div>
+                        <p class="text-xl font-bold text-slate-800" id="totalEarn">Rp 0</p>
+                        <p class="text-xs text-earn font-medium mt-1">EARN</p>
+                    </div>
+                    <div class="stat-card bg-white rounded-2xl p-5 shadow-sm border border-slate-100 transition-all">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-slate-400 uppercase">Operational</span>
+                            <span class="w-8 h-8 bg-opex-light rounded-lg flex items-center justify-center text-opex">🏢</span>
+                        </div>
+                        <p class="text-xl font-bold text-slate-800" id="totalOpex">Rp 0</p>
+                        <p class="text-xs text-opex font-medium mt-1">OPEX</p>
+                    </div>
+                    <div class="stat-card bg-white rounded-2xl p-5 shadow-sm border border-slate-100 transition-all">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-slate-400 uppercase">Variable Cost</span>
+                            <span class="w-8 h-8 bg-varcat-light rounded-lg flex items-center justify-center text-varcat">🔧</span>
+                        </div>
+                        <p class="text-xl font-bold text-slate-800" id="totalVar">Rp 0</p>
+                        <p class="text-xs text-varcat font-medium mt-1">VAR</p>
+                    </div>
+                    <div class="stat-card bg-white rounded-2xl p-5 shadow-sm border border-slate-100 transition-all">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-slate-400 uppercase">Taxes</span>
+                            <span class="w-8 h-8 bg-tax-light rounded-lg flex items-center justify-center text-tax">📋</span>
+                        </div>
+                        <p class="text-xl font-bold text-slate-800" id="totalTax">Rp 0</p>
+                        <p class="text-xs text-tax font-medium mt-1">TAX</p>
+                    </div>
+                    <div class="stat-card bg-white rounded-2xl p-5 shadow-sm border border-slate-100 transition-all">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-slate-400 uppercase">Net Profit</span>
+                            <span class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">📈</span>
+                        </div>
+                        <p class="text-xl font-bold" id="netProfit">Rp 0</p>
+                        <p class="text-xs text-slate-400 font-medium mt-1" id="netMargin">Margin: 0%</p>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-3 gap-6 mb-6">
+                    <div class="col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-semibold text-slate-800">Monthly Revenue vs Expenses</h3>
+                            <span class="text-sm font-medium text-slate-400">2025</span>
+                        </div>
+                        <div class="h-72"><canvas id="revenueChart"></canvas></div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <h3 class="font-semibold text-slate-800 mb-4">Expenses Breakdown</h3>
+                        <div class="relative h-48">
+                            <canvas id="expenseChart"></canvas>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-xs text-slate-400">Total</span>
+                                <span class="text-sm font-bold" id="totalExpenseCenter">Rp 0</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-4 text-xs">
+                            <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-opex"></span>OPEX <span class="ml-auto font-semibold" id="legOpex">0</span></div>
+                            <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-varcat"></span>VAR <span class="ml-auto font-semibold" id="legVar">0</span></div>
+                            <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-capex"></span>CAPEX <span class="ml-auto font-semibold" id="legCapex">0</span></div>
+                            <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-tax"></span>TAX <span class="ml-auto font-semibold" id="legTax">0</span></div>
+                            <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-fin"></span>FIN <span class="ml-auto font-semibold" id="legFin">0</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROI & Occupancy Cards -->
+                <div class="grid grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-5 text-white">
+                        <p class="text-sm opacity-80 mb-1">Gross Margin</p>
+                        <p class="text-3xl font-bold" id="grossMargin">0%</p>
+                        <p class="text-xs opacity-70 mt-2">Revenue - VAR</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-5 text-white">
+                        <p class="text-sm opacity-80 mb-1">Cash Balance</p>
+                        <p class="text-2xl font-bold" id="cashBalance">Rp 0</p>
+                        <p class="text-xs opacity-70 mt-2">Closing Balance</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-5 text-white">
+                        <p class="text-sm opacity-80 mb-1">ROI (YTD)</p>
+                        <p class="text-3xl font-bold" id="roiValue">0%</p>
+                        <p class="text-xs opacity-70 mt-2">Return on Investment</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-5 text-white">
+                        <p class="text-sm opacity-80 mb-1">Payback Period</p>
+                        <p class="text-2xl font-bold" id="paybackPeriod">0 years</p>
+                        <p class="text-xs opacity-70 mt-2">Estimated</p>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="px-6 py-4 flex items-center justify-between border-b border-slate-100">
+                        <h3 class="font-semibold text-slate-800">Recent Transactions</h3>
+                        <select id="monthFilter" onchange="updateTables()" class="bg-slate-100 px-3 py-2 rounded-lg text-sm font-medium border-0">
+                            <option value="all">All Months</option>
+                            <option value="01">January</option><option value="02">February</option><option value="04">April</option><option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option><option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option>
+                        </select>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead><tr class="bg-slate-50 text-xs text-slate-400 uppercase"><th class="px-6 py-3 text-left">Transaksi</th><th class="px-6 py-3 text-left">Tanggal</th><th class="px-6 py-3 text-left">Kategori</th><th class="px-6 py-3 text-left">Amount</th><th class="px-6 py-3 text-left">Account</th></tr></thead>
+                            <tbody id="dashTable" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions Tab -->
+            <div data-tab="transactions">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-6">
+                    <h3 class="font-semibold mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">➕</span> Tambah Transaksi</h3>
+                    <form id="transactionForm" class="grid grid-cols-6 gap-4">
+                        <div><label class="block text-xs font-semibold text-slate-500 mb-1">Tanggal</label><input type="date" id="inputDate" required class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></div>
+                        <div><label class="block text-xs font-semibold text-slate-500 mb-1">Kategori</label><select id="inputCategory" required class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500"><option value="">Pilih</option><option value="EARN">🟢 EARN</option><option value="OPEX">🔴 OPEX</option><option value="VAR">🟣 VAR</option><option value="CAPEX">⚪ CAPEX</option><option value="TAX">🔵 TAX</option><option value="FIN">🩷 FIN</option></select></div>
+                        <div class="col-span-2"><label class="block text-xs font-semibold text-slate-500 mb-1">Deskripsi</label><input type="text" id="inputDesc" placeholder="2 nights/Guest Name" required class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500"></div>
+                        <div><label class="block text-xs font-semibold text-slate-500 mb-1">Jumlah (Rp)</label><input type="number" id="inputAmount" placeholder="500000" required min="0" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500"></div>
+                        <div><label class="block text-xs font-semibold text-slate-500 mb-1">Akun</label><select id="inputAccount" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500"><option>BCA</option><option>Jago</option><option>Cash</option><option>Airbnb</option><option>Booking.com</option><option>Dirjen Pajak</option></select></div>
+                    </form>
+                    <div class="flex gap-3 mt-4">
+                        <button onclick="addTransaction()" class="px-5 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-semibold hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20">➕ Tambah Transaksi</button>
+                        <button onclick="showModal()" class="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-200">🗑️ Hapus Massal</button>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="px-6 py-4 flex items-center justify-between border-b border-slate-100">
+                        <h3 class="font-semibold">Semua Transaksi</h3>
+                        <div class="flex gap-2" id="filterBtns">
+                            <button onclick="setFilter('all')" class="filter-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-white">All</button>
+                            <button onclick="setFilter('EARN')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-earn-light text-earn-dark hover:bg-earn/20">EARN</button>
+                            <button onclick="setFilter('OPEX')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-opex-light text-opex-dark hover:bg-opex/20">OPEX</button>
+                            <button onclick="setFilter('VAR')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-varcat-light text-varcat-dark hover:bg-varcat/20">VAR</button>
+                            <button onclick="setFilter('CAPEX')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-capex-light text-capex-dark hover:bg-capex/20">CAPEX</button>
+                            <button onclick="setFilter('TAX')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-tax-light text-tax-dark hover:bg-tax/20">TAX</button>
+                            <button onclick="setFilter('FIN')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-fin-light text-fin-dark hover:bg-fin/20">FIN</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+                        <table class="w-full">
+                            <thead class="sticky top-0 bg-slate-50"><tr class="text-xs text-slate-400 uppercase"><th class="px-4 py-3 text-left">No</th><th class="px-4 py-3 text-left">Tanggal</th><th class="px-4 py-3 text-left">Deskripsi</th><th class="px-4 py-3 text-left">Kategori</th><th class="px-4 py-3 text-left">Income</th><th class="px-4 py-3 text-left">Expense</th><th class="px-4 py-3 text-left">Akun</th><th class="px-4 py-3 text-left">Aksi</th></tr></thead>
+                            <tbody id="trxTable" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div data-tab="reports">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold">Laporan Keuangan</h2>
+                    <div class="flex gap-3">
+                        <select id="reportMonth" class="px-4 py-2 border border-slate-200 rounded-xl text-sm font-semibold"><option value="01">January</option><option value="02">February</option><option value="04">April</option><option value="05">May</option><option value="06">June</option><option value="07">July</option><option value="08">August</option><option value="09">September</option><option value="10">October</option><option value="11">November</option><option value="12" selected>December</option></select>
+                        <button onclick="exportMonthlyPDF()" class="px-5 py-2 bg-emerald-500 text-white rounded-xl text-sm font-semibold hover:bg-emerald-600 shadow-lg shadow-emerald-500/20">📄 Export Bulanan</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="bg-white rounded-2xl shadow-sm overflow-hidden"><div class="bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-4"><h3 class="font-semibold text-white">📊 Income Statement</h3></div><div class="p-6" id="incomeReport"></div></div>
+                    <div class="bg-white rounded-2xl shadow-sm overflow-hidden"><div class="bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-4"><h3 class="font-semibold text-white">💵 Cash Flow</h3></div><div class="p-6" id="cashReport"></div></div>
+                </div>
+            </div>
+
+            <!-- Income Statement Tab -->
+            <div data-tab="income">
+                <div class="max-w-3xl bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div class="bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-5"><h3 class="font-bold text-white text-lg">HILLSIDE STUDIO LLC</h3><p class="text-emerald-100 text-sm">Laporan Laba Rugi • Tahun 2025</p></div>
+                    <div class="p-6" id="fullIncome"></div>
+                </div>
+            </div>
+
+            <!-- Balance Sheet Tab -->
+            <div data-tab="balance">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="bg-white rounded-2xl shadow-sm overflow-hidden"><div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4"><h3 class="font-semibold text-white">ASET</h3></div><div class="p-6" id="assetsReport"></div></div>
+                    <div class="bg-white rounded-2xl shadow-sm overflow-hidden"><div class="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4"><h3 class="font-semibold text-white">LIABILITAS & EKUITAS</h3></div><div class="p-6" id="equityReport"></div></div>
+                </div>
+            </div>
+
+            <!-- Cash Flow Tab -->
+            <div data-tab="cashflow">
+                <div class="max-w-3xl bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-5"><h3 class="font-bold text-white text-lg">Laporan Arus Kas</h3><p class="text-blue-100 text-sm">Tahun 2025</p></div>
+                    <div class="p-6" id="fullCash"></div>
+                </div>
+            </div>
+
+            <!-- ROI & Forecast Tab -->
+            <div data-tab="forecast">
+                <h2 class="text-xl font-bold mb-6">ROI & Financial Forecast</h2>
+                <div class="grid grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <h4 class="font-semibold text-slate-800 mb-4">Investment Summary</h4>
+                        <div class="space-y-3" id="investmentSummary"></div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <h4 class="font-semibold text-slate-800 mb-4">Return Analysis</h4>
+                        <div class="space-y-3" id="returnAnalysis"></div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <h4 class="font-semibold text-slate-800 mb-4">Projection (Next 12 Months)</h4>
+                        <div class="space-y-3" id="projection"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <h4 class="font-semibold text-slate-800 mb-4">Monthly Performance Trend</h4>
+                    <div class="h-80"><canvas id="forecastChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Delete Modal -->
+    <div id="modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🗑️</div>
+            <h3 class="text-xl font-bold text-center mb-6">Hapus Transaksi</h3>
+            <div class="space-y-2 mb-6">
+                <label class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer"><input type="radio" name="delType" value="EARN"> Hapus semua EARN</label>
+                <label class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer"><input type="radio" name="delType" value="OPEX"> Hapus semua OPEX</label>
+                <label class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer"><input type="radio" name="delType" value="VAR"> Hapus semua VAR</label>
+                <label class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer"><input type="radio" name="delType" value="CAPEX"> Hapus semua CAPEX</label>
+                <label class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer"><input type="radio" name="delType" value="TAX"> Hapus semua TAX</label>
+                <label class="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer"><input type="radio" name="delType" value="FIN"> Hapus semua FIN</label>
+                <label class="flex items-center gap-3 p-3 rounded-xl hover:bg-red-50 cursor-pointer text-red-600"><input type="radio" name="delType" value="ALL"> ⚠️ Hapus SEMUA</label>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="hideModal()" class="flex-1 px-5 py-3 bg-slate-100 rounded-xl font-semibold hover:bg-slate-200">Batal</button>
+                <button onclick="bulkDelete()" class="flex-1 px-5 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast fixed bottom-8 right-8 px-6 py-4 bg-emerald-500 text-white rounded-xl flex items-center gap-3 shadow-xl z-50">
+        <span id="toastIcon">✅</span><span id="toastMsg">Success!</span>
+    </div>
+
+    <script>
+        // Constants
+        const CAPITAL = 350000000;
+        const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        
+        // Data dari Excel HILLSIDE_STUDIO_v2.xlsx
+        let data = [
+            // JANUARY
+            {id:1,date:'2025-01-01',cat:'VAR',desc:'Battery ABC',income:0,expense:17300,acc:'Jago'},
+            {id:2,date:'2025-01-02',cat:'EARN',desc:'4 nights/Laras Dipa Pramudita',income:1569882,expense:0,acc:'BCA'},
+            {id:3,date:'2025-01-02',cat:'VAR',desc:'Guest Fee (Laras Dipa)',income:0,expense:212682,acc:'Airbnb'},
+            {id:4,date:'2025-01-02',cat:'VAR',desc:'Airbnb 3% Host Fee (Laras Dipa)',income:0,expense:40716,acc:'Airbnb'},
+            {id:5,date:'2025-01-02',cat:'TAX',desc:'PPN 3% Host Fee (Laras Dipa)',income:0,expense:4479,acc:'Dirjen Pajak'},
+            {id:6,date:'2025-01-04',cat:'FIN',desc:'Owners Withdrawal',income:0,expense:811597,acc:'Cash'},
+            {id:7,date:'2025-01-09',cat:'EARN',desc:'2 nights/Edwin Zainudin',income:728726,expense:0,acc:'BCA'},
+            {id:8,date:'2025-01-09',cat:'VAR',desc:'Guest Fee (Edwin)',income:0,expense:98726,acc:'Airbnb'},
+            {id:9,date:'2025-01-09',cat:'VAR',desc:'Airbnb 3% Host Fee (Edwin)',income:0,expense:18900,acc:'Airbnb'},
+            {id:10,date:'2025-01-09',cat:'TAX',desc:'PPN 3% Host Fee (Edwin)',income:0,expense:2079,acc:'Dirjen Pajak'},
+            {id:11,date:'2025-01-10',cat:'CAPEX',desc:'Vitrase',income:0,expense:240000,acc:'BCA'},
+            {id:12,date:'2025-01-12',cat:'EARN',desc:'1 night/Luisa Herawaty',income:880170,expense:0,acc:'BCA'},
+            {id:13,date:'2025-01-12',cat:'VAR',desc:'Guest Fee (Luisa)',income:0,expense:120170,acc:'Airbnb'},
+            {id:14,date:'2025-01-12',cat:'VAR',desc:'Airbnb 3% Host Fee (Luisa)',income:0,expense:22800,acc:'Airbnb'},
+            {id:15,date:'2025-01-12',cat:'TAX',desc:'PPN 3% Host Fee (Luisa)',income:0,expense:2736,acc:'Dirjen Pajak'},
+            {id:16,date:'2025-01-17',cat:'EARN',desc:'1 night/Andhika Badai',income:284825,expense:0,acc:'BCA'},
+            {id:17,date:'2025-01-17',cat:'VAR',desc:'Guest Fee (Andhika)',income:0,expense:38587,acc:'Airbnb'},
+            {id:18,date:'2025-01-17',cat:'VAR',desc:'Airbnb 3% Host Fee (Andhika)',income:0,expense:7387,acc:'Airbnb'},
+            {id:19,date:'2025-01-17',cat:'TAX',desc:'PPN 3% Host Fee (Andhika)',income:0,expense:813,acc:'Dirjen Pajak'},
+            {id:20,date:'2025-01-19',cat:'OPEX',desc:'Indihome',income:0,expense:319808,acc:'BCA'},
+            {id:21,date:'2025-01-20',cat:'EARN',desc:'1 night/Gerry Agriansyah',income:404847,expense:0,acc:'BCA'},
+            {id:22,date:'2025-01-20',cat:'EARN',desc:'1 night/Rizky Lukman',income:771307,expense:0,acc:'BCA'},
+            {id:23,date:'2025-01-20',cat:'OPEX',desc:'IPL',income:0,expense:776024,acc:'Jago'},
+            {id:24,date:'2025-01-23',cat:'EARN',desc:'3 nights/Karina Aditya',income:1231893,expense:0,acc:'BCA'},
+            {id:25,date:'2025-01-24',cat:'OPEX',desc:'Kosan',income:0,expense:665000,acc:'Jago'},
+            {id:26,date:'2025-01-28',cat:'OPEX',desc:'Netflix',income:0,expense:120000,acc:'Cash'},
+            {id:27,date:'2025-01-30',cat:'EARN',desc:'2 nights/Paramita',income:947341,expense:0,acc:'BCA'},
+            // FEBRUARY
+            {id:28,date:'2025-02-03',cat:'EARN',desc:'1 night/Dewanti Ramadhani',income:520518,expense:0,acc:'BCA'},
+            {id:29,date:'2025-02-03',cat:'VAR',desc:'Guest Fee (Dewanti)',income:0,expense:70518,acc:'Airbnb'},
+            {id:30,date:'2025-02-05',cat:'CAPEX',desc:'Handuk 2pcs',income:0,expense:147000,acc:'BCA'},
+            {id:31,date:'2025-02-06',cat:'EARN',desc:'1 night/Silmi Sabila',income:326026,expense:0,acc:'BCA'},
+            {id:32,date:'2025-02-10',cat:'EARN',desc:'3 nights/Aqila Afiqa',income:1471391,expense:0,acc:'BCA'},
+            {id:33,date:'2025-02-19',cat:'EARN',desc:'5 nights/Fasyekh Khoirul',income:2220877,expense:0,acc:'BCA'},
+            {id:34,date:'2025-02-20',cat:'OPEX',desc:'Indihome',income:0,expense:316350,acc:'BCA'},
+            {id:35,date:'2025-02-20',cat:'OPEX',desc:'IPL',income:0,expense:832300,acc:'BCA'},
+            {id:36,date:'2025-02-23',cat:'EARN',desc:'2 nights/Norish Emylia',income:1024092,expense:0,acc:'BCA'},
+            {id:37,date:'2025-02-24',cat:'OPEX',desc:'Kosan',income:0,expense:665000,acc:'Cash'},
+            // APRIL  
+            {id:38,date:'2025-04-06',cat:'EARN',desc:'1 night/Andhika Badai',income:302000,expense:0,acc:'BCA'},
+            {id:39,date:'2025-04-08',cat:'EARN',desc:'1 night/Fathiyah',income:496227,expense:0,acc:'BCA'},
+            {id:40,date:'2025-04-13',cat:'EARN',desc:'2 nights/Nanang',income:705591,expense:0,acc:'BCA'},
+            {id:41,date:'2025-04-13',cat:'CAPEX',desc:'Handuk 2pcs',income:0,expense:147000,acc:'Cash'},
+            {id:42,date:'2025-04-20',cat:'OPEX',desc:'IPL',income:0,expense:712600,acc:'BCA'},
+            {id:43,date:'2025-04-20',cat:'OPEX',desc:'Indihome',income:0,expense:316350,acc:'BCA'},
+            {id:44,date:'2025-04-25',cat:'OPEX',desc:'Kosan',income:0,expense:650000,acc:'Cash'},
+            // MAY
+            {id:45,date:'2025-05-04',cat:'EARN',desc:'1 night/Nuno Luz + EC',income:616077,expense:0,acc:'BCA'},
+            {id:46,date:'2025-05-05',cat:'EARN',desc:'1 night/Mutiara P',income:485816,expense:0,acc:'BCA'},
+            {id:47,date:'2025-05-05',cat:'OPEX',desc:'Kosan',income:0,expense:700000,acc:'Cash'},
+            {id:48,date:'2025-05-14',cat:'EARN',desc:'2 nights/Jehan Zafira',income:820000,expense:0,acc:'BCA'},
+            {id:49,date:'2025-05-14',cat:'EARN',desc:'2 nights/Dinda Budi',income:986671,expense:0,acc:'BCA'},
+            {id:50,date:'2025-05-20',cat:'OPEX',desc:'IPL',income:0,expense:781288,acc:'BCA'},
+            {id:51,date:'2025-05-20',cat:'OPEX',desc:'Indihome',income:0,expense:316350,acc:'BCA'},
+            {id:52,date:'2025-05-31',cat:'EARN',desc:'2 nights/Adhika Salma',income:941559,expense:0,acc:'BCA'},
+            // JUNE
+            {id:53,date:'2025-06-01',cat:'EARN',desc:'3 nights/Ashabul Kahfi',income:1388332,expense:0,acc:'BCA'},
+            {id:54,date:'2025-06-01',cat:'VAR',desc:'Guest Fee (Ashabul)',income:0,expense:228332,acc:'Airbnb'},
+            {id:55,date:'2025-06-01',cat:'TAX',desc:'PPN 3% Host Fee (Ashabul)',income:0,expense:3827,acc:'Dirjen Pajak'},
+            {id:56,date:'2025-06-07',cat:'EARN',desc:'3 nights/Ronny Surya',income:1329000,expense:0,acc:'BCA'},
+            {id:57,date:'2025-06-07',cat:'VAR',desc:'Komisi Booking.com (Ronny)',income:0,expense:199350,acc:'Booking.com'},
+            {id:58,date:'2025-06-07',cat:'TAX',desc:'PPN (Ronny)',income:0,expense:25291,acc:'Dirjen Pajak'},
+            {id:59,date:'2025-06-20',cat:'OPEX',desc:'IPL',income:0,expense:760120,acc:'BCA'},
+            {id:60,date:'2025-06-20',cat:'OPEX',desc:'Indihome',income:0,expense:316350,acc:'BCA'},
+            {id:61,date:'2025-06-20',cat:'OPEX',desc:'Kosan',income:0,expense:700000,acc:'Cash'},
+            {id:62,date:'2025-06-29',cat:'EARN',desc:'2 nights/Priskila',income:913798,expense:0,acc:'BCA'},
+            // JULY
+            {id:63,date:'2025-07-01',cat:'EARN',desc:'1 month/Wanhan',income:4000000,expense:0,acc:'Cash'},
+            {id:64,date:'2025-07-01',cat:'EARN',desc:'Wanhan Rental Deposit',income:2000000,expense:0,acc:'Cash'},
+            {id:65,date:'2025-07-23',cat:'OPEX',desc:'Kosan',income:0,expense:700000,acc:'Cash'},
+            // AUGUST
+            {id:66,date:'2025-08-01',cat:'EARN',desc:'26 nights/Hanhan Wang',income:4000000,expense:0,acc:'Cash'},
+            {id:67,date:'2025-08-25',cat:'OPEX',desc:'Kosan',income:0,expense:700000,acc:'Cash'},
+            {id:68,date:'2025-08-29',cat:'EARN',desc:'3 nights/Fernando',income:1329000,expense:0,acc:'BCA'},
+            {id:69,date:'2025-08-29',cat:'VAR',desc:'Komisi Booking.com (Fernando)',income:0,expense:199350,acc:'Booking.com'},
+            {id:70,date:'2025-08-29',cat:'TAX',desc:'PPN (Fernando)',income:0,expense:25291,acc:'Dirjen Pajak'},
+            // SEPTEMBER
+            {id:71,date:'2025-09-04',cat:'EARN',desc:'2 nights/Difa Salsabila',income:886000,expense:0,acc:'BCA'},
+            {id:72,date:'2025-09-04',cat:'VAR',desc:'Komisi Booking.com (Difa)',income:0,expense:132900,acc:'Booking.com'},
+            {id:73,date:'2025-09-04',cat:'TAX',desc:'PPN (Difa)',income:0,expense:16861,acc:'Dirjen Pajak'},
+            {id:74,date:'2025-09-06',cat:'EARN',desc:'1 night/Juliawati',income:497384,expense:0,acc:'BCA'},
+            {id:75,date:'2025-09-12',cat:'EARN',desc:'1 night/Afrigis + 50k EC',income:564735,expense:0,acc:'BCA'},
+            {id:76,date:'2025-09-20',cat:'OPEX',desc:'IPL',income:0,expense:698128,acc:'BCA'},
+            {id:77,date:'2025-09-20',cat:'OPEX',desc:'Indihome',income:0,expense:316350,acc:'BCA'},
+            {id:78,date:'2025-09-20',cat:'OPEX',desc:'Kosan',income:0,expense:700000,acc:'Cash'},
+            // OCTOBER
+            {id:79,date:'2025-10-04',cat:'EARN',desc:'1 night/Megariski Yuda',income:578354,expense:0,acc:'BCA'},
+            {id:80,date:'2025-10-04',cat:'VAR',desc:'Guest Fee (Megariski)',income:0,expense:78354,acc:'Airbnb'},
+            {id:81,date:'2025-10-04',cat:'TAX',desc:'PPN 3% Host Fee (Megariski)',income:0,expense:1650,acc:'Dirjen Pajak'},
+            {id:82,date:'2025-10-11',cat:'EARN',desc:'1 night/Ahmad Dzikra',income:578354,expense:0,acc:'BCA'},
+            {id:83,date:'2025-10-20',cat:'OPEX',desc:'IPL',income:0,expense:776752,acc:'BCA'},
+            {id:84,date:'2025-10-20',cat:'OPEX',desc:'Internet',income:0,expense:316350,acc:'BCA'},
+            {id:85,date:'2025-10-24',cat:'EARN',desc:'1 night/Febbyuli Arrissa',income:578354,expense:0,acc:'BCA'},
+            {id:86,date:'2025-10-26',cat:'TAX',desc:'Pajak Bumi dan Bangunan',income:0,expense:178053,acc:'Cash'},
+            {id:87,date:'2025-10-28',cat:'OPEX',desc:'Kosan',income:0,expense:700000,acc:'Cash'},
+            {id:88,date:'2025-10-31',cat:'CAPEX',desc:'Showerbox 90x90',income:0,expense:3824150,acc:'BCA'},
+            // NOVEMBER
+            {id:89,date:'2025-11-02',cat:'CAPEX',desc:'DP Renovasi Kamar Mandi',income:0,expense:780000,acc:'Jago'},
+            {id:90,date:'2025-11-04',cat:'CAPEX',desc:'Renovasi Kamar Mandi',income:0,expense:520000,acc:'Jago'},
+            {id:91,date:'2025-11-04',cat:'OPEX',desc:'Kosan',income:0,expense:1300000,acc:'Cash'},
+            {id:92,date:'2025-11-09',cat:'EARN',desc:'2 nights/Teh Dhika',income:500000,expense:0,acc:'BCA'},
+            {id:93,date:'2025-11-17',cat:'EARN',desc:'1 night/Aliendra',income:404847,expense:0,acc:'BCA'},
+            {id:94,date:'2025-11-17',cat:'EARN',desc:'1 night/Fadhillah Dekha',income:485816,expense:0,acc:'BCA'},
+            {id:95,date:'2025-11-20',cat:'OPEX',desc:'Indihome',income:0,expense:316350,acc:'BCA'},
+            {id:96,date:'2025-11-20',cat:'OPEX',desc:'IPL',income:0,expense:754424,acc:'BCA'},
+            {id:97,date:'2025-11-22',cat:'EARN',desc:'1 night/Fattih Rizqi',income:381713,expense:0,acc:'BCA'},
+            // DECEMBER
+            {id:98,date:'2025-12-05',cat:'EARN',desc:'2 nights/Nafisa Ardiningrum',income:855963,expense:0,acc:'BCA'},
+            {id:99,date:'2025-12-05',cat:'VAR',desc:'Guest Fee (Nafisa)',income:0,expense:115963,acc:'Airbnb'},
+            {id:100,date:'2025-12-05',cat:'TAX',desc:'PPN 3% Host Fee (Nafisa)',income:0,expense:2442,acc:'Dirjen Pajak'},
+            {id:101,date:'2025-12-06',cat:'EARN',desc:'1 night/Nafisa Extend',income:330000,expense:0,acc:'BCA'},
+            {id:102,date:'2025-12-10',cat:'OPEX',desc:'Kosan',income:0,expense:1300000,acc:'Cash'},
+            {id:103,date:'2025-12-15',cat:'EARN',desc:'4 nights/Nur Aziza Fitri',income:1620546,expense:0,acc:'BCA'},
+            {id:104,date:'2025-12-15',cat:'VAR',desc:'Guest Fee (Nur Aziza)',income:0,expense:219546,acc:'Airbnb'},
+            {id:105,date:'2025-12-15',cat:'TAX',desc:'PPN 3% Host Fee (Nur Aziza)',income:0,expense:4623,acc:'Dirjen Pajak'},
+            {id:106,date:'2025-12-18',cat:'EARN',desc:'2 nights/Vonna',income:843239,expense:0,acc:'BCA'},
+            {id:107,date:'2025-12-20',cat:'OPEX',desc:'Indihome',income:0,expense:316350,acc:'BCA'},
+            {id:108,date:'2025-12-21',cat:'OPEX',desc:'IPL',income:0,expense:737700,acc:'BCA'},
+            {id:109,date:'2025-12-23',cat:'EARN',desc:'2 nights/Nina Vella',income:936932,expense:0,acc:'BCA'},
+            {id:110,date:'2025-12-24',cat:'EARN',desc:'2 nights/Edy',income:1087304,expense:0,acc:'BCA'},
+            {id:111,date:'2025-12-26',cat:'EARN',desc:'2 nights/Dewi Miryam',income:1123162,expense:0,acc:'BCA'},
+            {id:112,date:'2025-12-28',cat:'EARN',desc:'1 night/Yumeico Sachi',income:601487,expense:0,acc:'BCA'},
+        ];
+        
+        let nextId = 200, filter = 'all';
+
+        // Utility functions
+        const fmt = n => 'Rp ' + Math.abs(n).toLocaleString('id-ID');
+        const fmtShort = n => n >= 1e6 ? (n/1e6).toFixed(1)+'jt' : (n/1e3).toFixed(0)+'rb';
+        const fmtDate = d => new Date(d).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+        
+        const catColors = {
+            EARN: {bg:'bg-earn-light',text:'text-earn-dark',hex:'#22c55e'},
+            OPEX: {bg:'bg-opex-light',text:'text-opex-dark',hex:'#ef4444'},
+            VAR: {bg:'bg-varcat-light',text:'text-varcat-dark',hex:'#a855f7'},
+            CAPEX: {bg:'bg-capex-light',text:'text-capex-dark',hex:'#6b7280'},
+            TAX: {bg:'bg-tax-light',text:'text-tax-dark',hex:'#3b82f6'},
+            FIN: {bg:'bg-fin-light',text:'text-fin-dark',hex:'#d946ef'}
+        };
+        const catIcons = {EARN:'💰',OPEX:'🏢',VAR:'🔧',CAPEX:'📦',TAX:'📋',FIN:'💸'};
+
+        function calc() {
+            let t = {earn:0,opex:0,var:0,capex:0,tax:0,fin:0,inc:0,exp:0};
+            data.forEach(x => {
+                t.inc += x.income;
+                t.exp += x.expense;
+                if(x.cat==='EARN') t.earn += x.income;
+                else if(x.cat==='OPEX') t.opex += x.expense;
+                else if(x.cat==='VAR') t.var += x.expense;
+                else if(x.cat==='CAPEX') t.capex += x.expense;
+                else if(x.cat==='TAX') t.tax += x.expense;
+                else if(x.cat==='FIN') t.fin += x.expense;
+            });
+            t.gross = t.earn - t.var;
+            t.net = t.earn - t.opex - t.var - t.tax;
+            t.cash = t.inc - t.exp;
+            t.grossMargin = t.earn > 0 ? ((t.gross/t.earn)*100).toFixed(1) : 0;
+            t.netMargin = t.earn > 0 ? ((t.net/t.earn)*100).toFixed(1) : 0;
+            t.roi = ((t.net / CAPITAL) * 100).toFixed(2);
+            t.payback = t.net > 0 ? (CAPITAL / (t.net * 12 / new Date().getMonth())).toFixed(1) : 'N/A';
+            return t;
+        }
+
+        function monthly() {
+            let m = Array(12).fill(0).map(()=>({i:0,e:0,earn:0,opex:0,var:0,capex:0,tax:0,fin:0}));
+            data.forEach(x => {
+                let mo = new Date(x.date).getMonth();
+                m[mo].i += x.income;
+                m[mo].e += x.expense;
+                m[mo].earn += x.income;
+                if(x.cat==='OPEX') m[mo].opex += x.expense;
+                if(x.cat==='VAR') m[mo].var += x.expense;
+                if(x.cat==='CAPEX') m[mo].capex += x.expense;
+                if(x.cat==='TAX') m[mo].tax += x.expense;
+                if(x.cat==='FIN') m[mo].fin += x.expense;
+            });
+            return m;
+        }
+
+        // Charts
+        let chartRevenue, chartExpense, chartForecast;
+        
+        function initCharts() {
+            const t = calc(), m = monthly();
+            
+            // Revenue vs Expense Chart
+            chartRevenue = new Chart(document.getElementById('revenueChart'), {
+                type: 'bar',
+                data: {
+                    labels: MONTHS,
+                    datasets: [
+                        {label:'Revenue',data:m.map(x=>x.i),backgroundColor:'#22c55e',borderRadius:6},
+                        {label:'Expense',data:m.map(x=>x.e),backgroundColor:'#ef4444',borderRadius:6}
+                    ]
+                },
+                options: {responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{x:{grid:{display:false}},y:{ticks:{callback:v=>fmtShort(v)}}}}
+            });
+
+            // Expense Breakdown Doughnut
+            chartExpense = new Chart(document.getElementById('expenseChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['OPEX','VAR','CAPEX','TAX','FIN'],
+                    datasets: [{data:[t.opex,t.var,t.capex,t.tax,t.fin],backgroundColor:['#ef4444','#a855f7','#6b7280','#3b82f6','#d946ef'],borderWidth:0}]
+                },
+                options: {responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false}}}
+            });
+
+            // Forecast Chart
+            chartForecast = new Chart(document.getElementById('forecastChart'), {
+                type: 'line',
+                data: {
+                    labels: MONTHS,
+                    datasets: [
+                        {label:'Net Profit',data:m.map(x=>x.earn-x.opex-x.var-x.tax),borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.1)',fill:true,tension:0.4},
+                        {label:'Revenue',data:m.map(x=>x.earn),borderColor:'#3b82f6',tension:0.4},
+                        {label:'Expenses',data:m.map(x=>x.e),borderColor:'#ef4444',tension:0.4}
+                    ]
+                },
+                options: {responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},scales:{y:{ticks:{callback:v=>fmtShort(v)}}}}
+            });
+        }
+
+        function updateAll() {
+            const t = calc(), m = monthly();
+            
+            // Update stats
+            document.getElementById('totalEarn').textContent = fmt(t.earn);
+            document.getElementById('totalOpex').textContent = fmt(t.opex);
+            document.getElementById('totalVar').textContent = fmt(t.var);
+            document.getElementById('totalTax').textContent = fmt(t.tax);
+            document.getElementById('netProfit').textContent = fmt(t.net);
+            document.getElementById('netProfit').className = `text-xl font-bold ${t.net>=0?'text-earn':'text-opex'}`;
+            document.getElementById('netMargin').textContent = `Margin: ${t.netMargin}%`;
+            document.getElementById('grossMargin').textContent = t.grossMargin + '%';
+            document.getElementById('cashBalance').textContent = fmt(t.cash);
+            document.getElementById('roiValue').textContent = t.roi + '%';
+            document.getElementById('paybackPeriod').textContent = t.payback + ' years';
+            
+            // Expense breakdown
+            document.getElementById('totalExpenseCenter').textContent = fmtShort(t.opex+t.var+t.capex+t.tax+t.fin);
+            document.getElementById('legOpex').textContent = fmtShort(t.opex);
+            document.getElementById('legVar').textContent = fmtShort(t.var);
+            document.getElementById('legCapex').textContent = fmtShort(t.capex);
+            document.getElementById('legTax').textContent = fmtShort(t.tax);
+            document.getElementById('legFin').textContent = fmtShort(t.fin);
+
+            // Update charts
+            chartRevenue.data.datasets[0].data = m.map(x=>x.i);
+            chartRevenue.data.datasets[1].data = m.map(x=>x.e);
+            chartRevenue.update();
+            chartExpense.data.datasets[0].data = [t.opex,t.var,t.capex,t.tax,t.fin];
+            chartExpense.update();
+            chartForecast.data.datasets[0].data = m.map(x=>x.earn-x.opex-x.var-x.tax);
+            chartForecast.data.datasets[1].data = m.map(x=>x.earn);
+            chartForecast.data.datasets[2].data = m.map(x=>x.e);
+            chartForecast.update();
+
+            updateTables();
+            updateReports();
+            updateForecast();
+        }
+
+        function updateTables() {
+            const mf = document.getElementById('monthFilter').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            let f = data.filter(x => (mf==='all' || x.date.split('-')[1]===mf) && (x.desc.toLowerCase().includes(search) || x.cat.toLowerCase().includes(search)));
+            
+            // Dashboard table
+            document.getElementById('dashTable').innerHTML = f.slice(-12).reverse().map(x => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-3"><div class="flex items-center gap-3"><span class="w-8 h-8 rounded-lg flex items-center justify-center ${catColors[x.cat].bg}">${catIcons[x.cat]}</span><span class="font-medium text-sm">${x.desc.substring(0,30)}</span></div></td>
+                    <td class="px-6 py-3 text-sm text-slate-500">${fmtDate(x.date)}</td>
+                    <td class="px-6 py-3"><span class="px-2 py-1 rounded-md text-xs font-semibold ${catColors[x.cat].bg} ${catColors[x.cat].text}">${x.cat}</span></td>
+                    <td class="px-6 py-3 text-sm font-semibold ${x.income>0?'text-earn':'text-opex'}">${x.income>0?'+':'-'}${fmt(x.income||x.expense)}</td>
+                    <td class="px-6 py-3 text-sm text-slate-500">${x.acc||'-'}</td>
+                </tr>
+            `).join('');
+
+            // Transaction table
+            let ff = data;
+            if(filter!=='all') ff = ff.filter(x=>x.cat===filter);
+            if(search) ff = ff.filter(x=>x.desc.toLowerCase().includes(search));
+            document.getElementById('trxTable').innerHTML = ff.map((x,i) => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-4 py-2.5 text-sm text-slate-400">${i+1}</td>
+                    <td class="px-4 py-2.5 text-sm">${fmtDate(x.date)}</td>
+                    <td class="px-4 py-2.5 text-sm font-medium">${x.desc}</td>
+                    <td class="px-4 py-2.5"><span class="px-2 py-0.5 rounded text-xs font-semibold ${catColors[x.cat].bg} ${catColors[x.cat].text}">${x.cat}</span></td>
+                    <td class="px-4 py-2.5 text-sm font-semibold text-earn">${x.income>0?fmt(x.income):'-'}</td>
+                    <td class="px-4 py-2.5 text-sm font-semibold text-opex">${x.expense>0?fmt(x.expense):'-'}</td>
+                    <td class="px-4 py-2.5 text-sm text-slate-500">${x.acc||'-'}</td>
+                    <td class="px-4 py-2.5"><button onclick="del(${x.id})" class="p-1.5 bg-red-100 text-red-600 rounded-lg text-xs hover:bg-red-200">🗑️</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function updateReports() {
+            const t = calc();
+            const row = (l,v,c) => `<div class="flex justify-between py-2 ${c||''}"><span class="text-slate-500">${l}</span><span class="font-semibold">${v}</span></div>`;
+            
+            // Income Report
+            document.getElementById('incomeReport').innerHTML = 
+                row('Service Revenue (EARN)',fmt(t.earn),'text-earn') +
+                row('(-) Variable Cost (VAR)',fmt(t.var),'text-varcat') +
+                `<div class="flex justify-between py-3 border-t-2 border-slate-200 font-bold"><span>Gross Profit</span><span>${fmt(t.gross)}</span></div>` +
+                `<div class="text-xs text-slate-400 mb-2">Gross Margin: ${t.grossMargin}%</div>` +
+                row('(-) Operational (OPEX)',fmt(t.opex),'text-opex') +
+                row('(-) Taxes (TAX)',fmt(t.tax),'text-tax') +
+                `<div class="flex justify-between py-3 border-t-2 border-slate-200 font-bold ${t.net>=0?'text-earn':'text-opex'}"><span>Net Profit</span><span>${fmt(t.net)}</span></div>`;
+
+            // Cash Report
+            document.getElementById('cashReport').innerHTML = 
+                row('Cash In (EARN)','+'+fmt(t.earn),'text-earn') +
+                row('Cash Out (OPEX)','-'+fmt(t.opex),'text-opex') +
+                row('Cash Out (VAR)','-'+fmt(t.var),'text-varcat') +
+                row('Cash Out (CAPEX)','-'+fmt(t.capex),'text-capex') +
+                row('Cash Out (TAX)','-'+fmt(t.tax),'text-tax') +
+                row('Cash Out (FIN)','-'+fmt(t.fin),'text-fin') +
+                `<div class="flex justify-between py-3 border-t-2 border-slate-200 font-bold"><span>Net Cash Flow</span><span>${fmt(t.cash)}</span></div>`;
+
+            // Full Income Statement
+            document.getElementById('fullIncome').innerHTML = `
+                <div class="bg-earn-light px-4 py-3 rounded-xl mb-4"><span class="font-bold text-earn-dark">PENDAPATAN</span></div>
+                ${row('Pendapatan Sewa',fmt(t.earn))}
+                <div class="flex justify-between py-3 border-t font-semibold"><span>Total Pendapatan</span><span>${fmt(t.earn)}</span></div>
+                <div class="bg-varcat-light px-4 py-3 rounded-xl my-4"><span class="font-bold text-varcat-dark">HARGA POKOK PENJUALAN</span></div>
+                ${row('Biaya Variable (Platform Fee, Laundry, dll)',fmt(t.var))}
+                <div class="flex justify-between py-3 border-t font-semibold"><span>Laba Kotor</span><span>${fmt(t.gross)}</span></div>
+                ${row('Margin Kotor',t.grossMargin+'%')}
+                <div class="bg-opex-light px-4 py-3 rounded-xl my-4"><span class="font-bold text-opex-dark">BEBAN OPERASIONAL</span></div>
+                ${row('IPL, Internet, Kosan, dll',fmt(t.opex))}
+                <div class="bg-tax-light px-4 py-3 rounded-xl my-4"><span class="font-bold text-tax-dark">PAJAK</span></div>
+                ${row('PPN, PBB',fmt(t.tax))}
+                <div class="flex justify-between py-4 px-4 rounded-xl font-bold text-white mt-4 ${t.net>=0?'bg-earn':'bg-opex'}"><span>LABA BERSIH</span><span>${fmt(t.net)}</span></div>
+                ${row('Margin Bersih',t.netMargin+'%')}
+            `;
+
+            // Balance Sheet
+            document.getElementById('assetsReport').innerHTML = `
+                <div class="font-semibold text-blue-600 py-2">Aset Lancar</div>
+                ${row('Kas & Bank',fmt(t.cash))}
+                <div class="font-semibold text-blue-600 py-2 mt-4">Aset Tetap</div>
+                ${row('Properti (Apartemen)',fmt(CAPITAL))}
+                ${row('Peralatan (CAPEX)',fmt(t.capex))}
+                <div class="flex justify-between py-4 px-4 rounded-xl bg-blue-500 text-white font-bold mt-4"><span>TOTAL ASET</span><span>${fmt(CAPITAL+t.cash+t.capex)}</span></div>
+            `;
+            document.getElementById('equityReport').innerHTML = `
+                <div class="font-semibold text-red-600 py-2">Liabilitas</div>
+                ${row('Utang Usaha','Rp 0')}
+                <div class="font-semibold text-purple-600 py-2 mt-4">Ekuitas</div>
+                ${row('Modal Disetor',fmt(CAPITAL))}
+                ${row('Laba Ditahan',fmt(t.net))}
+                ${row('(-) Dividen',fmt(t.fin))}
+                <div class="flex justify-between py-4 px-4 rounded-xl bg-purple-500 text-white font-bold mt-4"><span>TOTAL L+E</span><span>${fmt(CAPITAL+t.net-t.fin)}</span></div>
+            `;
+
+            // Cash Flow Statement
+            document.getElementById('fullCash').innerHTML = `
+                <div class="bg-earn-light px-4 py-3 rounded-xl mb-4"><span class="font-bold text-earn-dark">Aktivitas Operasi</span></div>
+                ${row('Kas dari pelanggan','+'+fmt(t.earn),'text-earn')}
+                ${row('Pembayaran OPEX','-'+fmt(t.opex),'text-opex')}
+                ${row('Pembayaran VAR','-'+fmt(t.var),'text-varcat')}
+                ${row('Pembayaran Pajak','-'+fmt(t.tax),'text-tax')}
+                <div class="flex justify-between py-3 border-t font-semibold"><span>Kas Bersih dari Operasi</span><span>${fmt(t.earn-t.opex-t.var-t.tax)}</span></div>
+                <div class="bg-blue-100 px-4 py-3 rounded-xl my-4"><span class="font-bold text-blue-700">Aktivitas Investasi</span></div>
+                ${row('Pembelian Aset','-'+fmt(t.capex),'text-capex')}
+                <div class="bg-fin-light px-4 py-3 rounded-xl my-4"><span class="font-bold text-fin-dark">Aktivitas Pendanaan</span></div>
+                ${row('Dividen/Penarikan','-'+fmt(t.fin),'text-fin')}
+                <div class="flex justify-between py-4 px-4 rounded-xl bg-slate-800 text-white font-bold mt-4"><span>Perubahan Kas Bersih</span><span>${fmt(t.cash)}</span></div>
+            `;
+        }
+
+        function updateForecast() {
+            const t = calc();
+            const m = monthly();
+            const avgMonthlyProfit = t.net / 12;
+            const annualizedProfit = avgMonthlyProfit * 12;
+            
+            document.getElementById('investmentSummary').innerHTML = `
+                <div class="flex justify-between py-2 border-b"><span class="text-slate-500">Initial Investment</span><span class="font-semibold">${fmt(CAPITAL)}</span></div>
+                <div class="flex justify-between py-2 border-b"><span class="text-slate-500">Total Revenue (YTD)</span><span class="font-semibold text-earn">${fmt(t.earn)}</span></div>
+                <div class="flex justify-between py-2 border-b"><span class="text-slate-500">Total Expenses (YTD)</span><span class="font-semibold text-opex">${fmt(t.exp)}</span></div>
+                <div class="flex justify-between py-2"><span class="text-slate-500">Net Profit (YTD)</span><span class="font-semibold ${t.net>=0?'text-earn':'text-opex'}">${fmt(t.net)}</span></div>
+            `;
+
+            document.getElementById('returnAnalysis').innerHTML = `
+                <div class="flex justify-between py-2 border-b"><span class="text-slate-500">ROI (YTD)</span><span class="font-bold text-lg ${t.roi>=0?'text-earn':'text-opex'}">${t.roi}%</span></div>
+                <div class="flex justify-between py-2 border-b"><span class="text-slate-500">Gross Margin</span><span class="font-semibold">${t.grossMargin}%</span></div>
+                <div class="flex justify-between py-2 border-b"><span class="text-slate-500">Net Margin</span><span class="font-semibold">${t.netMargin}%</span></div>
+                <div class="flex justify-between py-2"><span class="text-slate-500">Payback Period</span><span class="font-semibold">${t.payback} years</span></div>
+            `;
+
+            document.getElementById('projection').innerHTML = `
+                <div class="flex justify-between py-2 border-b"><span class="text-slate-500">Avg Monthly Profit</span><span class="font-semibold">${fmt(avgMonthlyProfit)}</span></div>
+                <div class="flex justify-between py-2 border-b"><span class="text-slate-500">Projected Annual</span><span class="font-semibold">${fmt(annualizedProfit)}</span></div>
+                <div class="flex justify-between py-2 border-b"><span class="text-slate-500">Monthly Yield</span><span class="font-semibold">${((avgMonthlyProfit/CAPITAL)*100).toFixed(2)}%</span></div>
+                <div class="flex justify-between py-2"><span class="text-slate-500">Annual Yield</span><span class="font-semibold">${((annualizedProfit/CAPITAL)*100).toFixed(2)}%</span></div>
+            `;
+        }
+
+        // Navigation & UI
+        function showTab(name) {
+            document.querySelectorAll('[data-tab]').forEach(x=>x.classList.remove('active'));
+            document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b=>{
+                b.classList.remove('bg-emerald-50','text-emerald-600','border-emerald-100');
+                b.classList.add('text-slate-500');
+            });
+            event.target.classList.add('bg-emerald-50','text-emerald-600','border','border-emerald-100');
+            event.target.classList.remove('text-slate-500');
+        }
+
+        function setFilter(f) {
+            filter = f;
+            document.querySelectorAll('.filter-btn').forEach(b=>{
+                b.classList.remove('bg-slate-800','text-white');
+            });
+            event.target.classList.add('bg-slate-800','text-white');
+            updateTables();
+        }
+
+        // CRUD Operations
+        function addTransaction() {
+            const cat = document.getElementById('inputCategory').value;
+            const amt = parseFloat(document.getElementById('inputAmount').value);
+            if(!cat || !amt) return toast('Mohon lengkapi semua field','error');
+            data.push({
+                id: nextId++,
+                date: document.getElementById('inputDate').value,
+                cat,
+                desc: document.getElementById('inputDesc').value,
+                income: cat==='EARN' ? amt : 0,
+                expense: cat!=='EARN' ? amt : 0,
+                acc: document.getElementById('inputAccount').value
+            });
+            document.getElementById('transactionForm').reset();
+            document.getElementById('inputDate').valueAsDate = new Date();
+            updateAll();
+            toast('Transaksi berhasil ditambahkan!');
+        }
+
+        function del(id) {
+            if(confirm('Hapus transaksi ini?')) {
+                data = data.filter(x=>x.id!==id);
+                updateAll();
+                toast('Transaksi dihapus!');
+            }
+        }
+
+        function showModal() { document.getElementById('modal').classList.remove('hidden'); }
+        function hideModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        function bulkDelete() {
+            const sel = document.querySelector('input[name="delType"]:checked');
+            if(!sel) return toast('Pilih kategori','error');
+            const type = sel.value;
+            let c = 0;
+            if(type==='ALL') {
+                if(!confirm('Hapus SEMUA transaksi?')) return;
+                c = data.length; data = []; nextId = 1;
+            } else {
+                c = data.filter(x=>x.cat===type).length;
+                data = data.filter(x=>x.cat!==type);
+            }
+            hideModal();
+            updateAll();
+            toast(`${c} transaksi dihapus!`);
+        }
+
+        function toast(msg, type='success') {
+            const t = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            document.getElementById('toastIcon').textContent = type==='success'?'✅':'❌';
+            t.className = `toast fixed bottom-8 right-8 px-6 py-4 rounded-xl flex items-center gap-3 shadow-xl z-50 show ${type==='success'?'bg-emerald-500':'bg-red-500'} text-white`;
+            setTimeout(()=>t.classList.remove('show'),3000);
+        }
+
+        // PDF Export
+        function exportPDF() {
+            const {jsPDF} = window.jspdf, doc = new jsPDF();
+            const t = calc();
+            doc.setFontSize(20); doc.setTextColor(16,185,129); doc.text('HILLSIDE STUDIO LLC',105,20,{align:'center'});
+            doc.setFontSize(12); doc.setTextColor(0,0,0); doc.text('Laporan Keuangan 2025',105,28,{align:'center'});
+            doc.setFontSize(10);
+            doc.text(`Revenue: ${fmt(t.earn)} | Expenses: ${fmt(t.exp)} | Net Profit: ${fmt(t.net)}`,105,38,{align:'center'});
+            doc.autoTable({
+                head:[['Tanggal','Deskripsi','Kategori','Income','Expense','Akun']],
+                body:data.map(x=>[fmtDate(x.date),x.desc.substring(0,25),x.cat,x.income>0?fmt(x.income):'-',x.expense>0?fmt(x.expense):'-',x.acc||'-']),
+                startY:45,styles:{fontSize:7},headStyles:{fillColor:[16,185,129]}
+            });
+            doc.save('hillside_studio_2025.pdf');
+            toast('PDF berhasil diexport!');
+        }
+
+        function exportMonthlyPDF() {
+            const {jsPDF} = window.jspdf, doc = new jsPDF();
+            const mo = document.getElementById('reportMonth').value;
+            const names = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+            const mTrx = data.filter(x=>x.date.split('-')[1]===mo);
+            let mt = {earn:0,opex:0,var:0,capex:0,tax:0,fin:0};
+            mTrx.forEach(x=>{
+                if(x.cat==='EARN') mt.earn+=x.income;
+                else if(x.cat==='OPEX') mt.opex+=x.expense;
+                else if(x.cat==='VAR') mt.var+=x.expense;
+                else if(x.cat==='CAPEX') mt.capex+=x.expense;
+                else if(x.cat==='TAX') mt.tax+=x.expense;
+                else if(x.cat==='FIN') mt.fin+=x.expense;
+            });
+            const np = mt.earn - mt.opex - mt.var - mt.tax;
+            
+            doc.setFontSize(20); doc.setTextColor(16,185,129); doc.text('HILLSIDE STUDIO LLC',105,20,{align:'center'});
+            doc.setFontSize(14); doc.setTextColor(0,0,0); doc.text(`Laporan Bulanan - ${names[parseInt(mo)]} 2025`,105,30,{align:'center'});
+            
+            doc.setFillColor(16,185,129); doc.rect(14,40,182,8,'F');
+            doc.setTextColor(255,255,255); doc.setFontSize(12); doc.text('INCOME STATEMENT',105,46,{align:'center'});
+            
+            doc.setTextColor(0,0,0); doc.setFontSize(10); let y = 58;
+            doc.text('Revenue (EARN)',20,y); doc.text(fmt(mt.earn),180,y,{align:'right'}); y+=8;
+            doc.text('(-) Variable (VAR)',20,y); doc.text(fmt(mt.var),180,y,{align:'right'}); y+=8;
+            doc.setFont(undefined,'bold'); doc.text('Gross Profit',20,y); doc.text(fmt(mt.earn-mt.var),180,y,{align:'right'}); y+=8;
+            doc.setFont(undefined,'normal'); doc.text('(-) OPEX',20,y); doc.text(fmt(mt.opex),180,y,{align:'right'}); y+=8;
+            doc.text('(-) TAX',20,y); doc.text(fmt(mt.tax),180,y,{align:'right'}); y+=10;
+            
+            doc.setFillColor(np>=0?16:239,np>=0?185:68,np>=0?129:68); doc.rect(14,y-5,182,10,'F');
+            doc.setTextColor(255,255,255); doc.setFont(undefined,'bold');
+            doc.text('NET PROFIT',20,y+2); doc.text(fmt(np),180,y+2,{align:'right'});
+            
+            y+=20; doc.setTextColor(0,0,0); doc.setFillColor(59,130,246); doc.rect(14,y,182,8,'F');
+            doc.setTextColor(255,255,255); doc.text('TRANSACTIONS',105,y+6,{align:'center'});
+            
+            doc.autoTable({
+                head:[['Tanggal','Deskripsi','Kategori','Income','Expense']],
+                body:mTrx.map(x=>[fmtDate(x.date),x.desc.substring(0,22),x.cat,x.income>0?fmt(x.income):'-',x.expense>0?fmt(x.expense):'-']),
+                startY:y+12,styles:{fontSize:7},headStyles:{fillColor:[16,185,129]}
+            });
+            doc.save(`hillside_${names[parseInt(mo)]}_2025.pdf`);
+            toast('PDF bulanan berhasil diexport!');
+        }
+
+        // Initialize
+        document.getElementById('inputDate').valueAsDate = new Date();
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+        initCharts();
+        updateAll();
+    </script>
+</body>
+</html>
