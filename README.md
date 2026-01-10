@@ -49,48 +49,91 @@ Aplikasi interactive untuk sistem input keuangan Hillside Studio yang sekali inp
 
 ## 🚀 Quick Start
 
-### Option 1: Static HTML (Simple)
-Buka file `index.html` di browser.
+### Prerequisites
+- Node.js 18+ installed
+- Supabase account (free tier available)
+- Git installed
 
-### Option 2: Local Server
+### 1. Clone & Install
 ```bash
-# Python
-python -m http.server 8000
-
-# Node.js
-npx serve
+git clone <your-repo-url>
+cd hillside-studio-v2
+npm install
 ```
 
-### Option 3: Deploy to Vercel
+### 2. Setup Supabase
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Run the SQL schema from `sql/schema.sql` in Supabase SQL Editor
+3. (Optional) Run `sql/seed.sql` for sample data
+4. Copy your Supabase URL and Anon Key
+
+### 3. Configure Environment
+```bash
+cp .env.local.example .env.local
+```
+
+Edit `.env.local` and add your Supabase credentials:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+### 4. Run Development Server
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### 5. Deploy to Vercel
 ```bash
 npm install -g vercel
 vercel
 ```
 
+Or connect your GitHub repo to Vercel dashboard and add environment variables.
+
 ## 📁 Project Structure
 
 ```
 hillside-studio-v2/
-├── index.html          # Main application (standalone)
-├── README.md           # Documentation
-├── LICENSE             # MIT License
-├── package.json        # Node.js config (optional)
-├── vercel.json         # Vercel deployment config
-├── public/
-│   └── favicon.ico     # App icon
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx       # Root layout
+│   │   ├── page.tsx         # Main page
+│   │   └── globals.css      # Global styles
+│   ├── components/
+│   │   ├── Sidebar.tsx      # Navigation sidebar
+│   │   ├── Header.tsx       # App header
+│   │   ├── Dashboard.tsx    # Dashboard view
+│   │   └── Transactions.tsx # Transaction management
+│   ├── lib/
+│   │   ├── supabase.ts      # Supabase client
+│   │   ├── utils.ts         # Utility functions
+│   │   └── constants.ts     # App constants
+│   └── types/
+│       └── index.ts         # TypeScript types
 ├── sql/
-│   ├── schema.sql      # Database schema
-│   └── seed.sql        # Sample data
-└── docs/
-    └── SETUP.md        # Deployment guide
+│   ├── schema.sql           # Database schema
+│   └── seed.sql             # Sample data
+├── package.json             # Dependencies
+├── tsconfig.json            # TypeScript config
+├── tailwind.config.ts       # Tailwind config
+├── next.config.js           # Next.js config
+└── vercel.json              # Vercel deployment config
 ```
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: HTML5, Tailwind CSS, Vanilla JavaScript
-- **Charts**: Chart.js
+- **Framework**: Next.js 14 (React 18)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Database**: Supabase (PostgreSQL)
+- **Charts**: Chart.js + react-chartjs-2
 - **PDF Export**: jsPDF + jsPDF-AutoTable
 - **Font**: Plus Jakarta Sans (Google Fonts)
+- **Deployment**: Vercel
 
 ## 📊 Database Schema (for Supabase)
 
@@ -112,13 +155,24 @@ CREATE TABLE transactions (
 );
 ```
 
-## 🔐 Future: Authentication (Supabase)
+## 🔐 Database & Authentication
 
+### Current Implementation
+- Direct Supabase client integration
+- Real-time CRUD operations
+- PostgreSQL with Row Level Security (RLS)
+
+### Planned: Authentication
 ```javascript
-// Planned roles
+// Future roles
 - superadmin: Full access (CRUD)
 - viewer: Read-only access
 ```
+
+To enable authentication:
+1. Enable Email Auth in Supabase Dashboard
+2. Update RLS policies in `sql/schema.sql`
+3. Add authentication UI components
 
 ## 📱 Responsive Design
 
