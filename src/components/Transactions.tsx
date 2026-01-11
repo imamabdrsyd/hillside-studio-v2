@@ -118,8 +118,8 @@ export default function Transactions({ transactions, onAdd, onEdit, onDelete }: 
         ))}
       </div>
 
-      {/* Transaction Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      {/* Transaction Table - Desktop */}
+      <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -179,6 +179,61 @@ export default function Transactions({ transactions, onAdd, onEdit, onDelete }: 
         </div>
       </div>
 
+      {/* Transaction Cards - Mobile */}
+      <div className="md:hidden space-y-4">
+        {filteredTransactions.map((transaction) => (
+          <div key={transaction.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getCategoryClass(transaction.category)}`}>
+                {transaction.category}
+              </span>
+              <span className="text-xs text-slate-500">
+                {new Date(transaction.date).toLocaleDateString('id-ID')}
+              </span>
+            </div>
+
+            <p className="text-sm font-semibold text-slate-700 mb-2">{transaction.description}</p>
+
+            <div className="flex items-center justify-between mb-3">
+              <div className="space-y-1">
+                {transaction.income > 0 && (
+                  <div className="text-sm">
+                    <span className="text-slate-500">Income: </span>
+                    <span className="text-green-600 font-semibold">{formatCurrency(transaction.income)}</span>
+                  </div>
+                )}
+                {transaction.expense > 0 && (
+                  <div className="text-sm">
+                    <span className="text-slate-500">Expense: </span>
+                    <span className="text-red-600 font-semibold">{formatCurrency(transaction.expense)}</span>
+                  </div>
+                )}
+                <div className="text-xs text-slate-500">Account: {transaction.account}</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+              <button
+                onClick={() => handleEdit(transaction)}
+                className="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg text-xs font-semibold hover:bg-blue-600 transition-all"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm('Are you sure you want to delete this transaction?')) {
+                    onDelete(transaction.id)
+                  }
+                }}
+                className="flex-1 px-3 py-2 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition-all"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Form Modal */}
       {isFormOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -190,7 +245,7 @@ export default function Transactions({ transactions, onAdd, onEdit, onDelete }: 
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Date</label>
                   <input
@@ -229,7 +284,7 @@ export default function Transactions({ transactions, onAdd, onEdit, onDelete }: 
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">Amount</label>
                   <input
