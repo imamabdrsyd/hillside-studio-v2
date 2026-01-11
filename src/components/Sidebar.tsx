@@ -43,12 +43,29 @@ export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }: Sid
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-emerald-500/30">
-          🏔️
-        </div>
-        <div>
-          <h1 className="text-lg font-bold text-slate-800">Hillside Studio</h1>
-          <p className="text-[10px] text-slate-400 font-medium">Finance Management v2</p>
+        {/* Logo - Replace with actual logo image */}
+        <img
+          src="/images/hillside-logo.png"
+          alt="Hillside Studio Logo"
+          className="h-12 w-auto object-contain"
+          onError={(e) => {
+            // Fallback to text logo if image not found
+            e.currentTarget.style.display = 'none'
+            const fallback = e.currentTarget.nextElementSibling
+            if (fallback) fallback.classList.remove('hidden')
+          }}
+        />
+        {/* Fallback text logo (hidden by default) */}
+        <div className="hidden">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-emerald-500/30">
+              🏔️
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-slate-800">Hillside Studio</h1>
+              <p className="text-[10px] text-slate-400 font-medium">Finance Management v2</p>
+            </div>
+          </div>
         </div>
       </div>
 
