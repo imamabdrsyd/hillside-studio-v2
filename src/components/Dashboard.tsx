@@ -78,7 +78,7 @@ export default function Dashboard({ stats, transactions }: DashboardProps) {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <StatCard
           title="Revenue"
           value={stats.revenue}
@@ -122,7 +122,7 @@ export default function Dashboard({ stats, transactions }: DashboardProps) {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
           <h3 className="text-lg font-bold text-slate-800 mb-4">Revenue vs Expenses</h3>
           <Bar
@@ -154,7 +154,7 @@ export default function Dashboard({ stats, transactions }: DashboardProps) {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
           title="Gross Margin"
           value={`${stats.grossMargin.toFixed(1)}%`}

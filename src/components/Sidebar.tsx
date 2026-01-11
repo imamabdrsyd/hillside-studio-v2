@@ -3,9 +3,11 @@
 interface SidebarProps {
   activeTab: string
   onTabChange: (tab: string) => void
+  isOpen: boolean
+  onClose: () => void
 }
 
-export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }: SidebarProps) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊', group: 'Overview' },
     { id: 'transactions', label: 'Transactions', icon: '📋', group: 'Overview' },
@@ -18,8 +20,28 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
 
   const groups = ['Overview', 'Financial Statements', 'Analysis']
 
+  const handleNavClick = (tab: string) => {
+    onTabChange(tab)
+    onClose() // Close mobile menu after selecting
+  }
+
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 p-5 flex flex-col fixed h-screen z-50">
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        w-64 bg-white border-r border-slate-200 p-5 flex flex-col fixed h-screen z-50
+        transition-transform duration-300 ease-in-out
+        lg:translate-x-0
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
       <div className="flex items-center gap-3 mb-8">
         <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-emerald-500/30">
           🏔️
@@ -42,7 +64,7 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               .map(item => (
                 <button
                   key={item.id}
-                  onClick={() => onTabChange(item.id)}
+                  onClick={() => handleNavClick(item.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     activeTab === item.id
                       ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
@@ -69,5 +91,6 @@ export default function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         </div>
       </div>
     </aside>
+    </>
   )
 }

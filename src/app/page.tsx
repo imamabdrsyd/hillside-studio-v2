@@ -16,6 +16,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [supabaseConfigured, setSupabaseConfigured] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // Fetch transactions from Supabase
   useEffect(() => {
@@ -159,14 +160,23 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex bg-slate-50">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
 
-      <main className="flex-1 ml-64 min-h-screen">
-        <Header onSearch={setSearchQuery} onExportPDF={handleExportPDF} />
+      <main className="flex-1 lg:ml-64 min-h-screen">
+        <Header
+          onSearch={setSearchQuery}
+          onExportPDF={handleExportPDF}
+          onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        />
 
         {/* Supabase Configuration Warning */}
         {!supabaseConfigured && (
-          <div className="mx-8 mt-8 mb-0 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-lg">
+          <div className="mx-4 lg:mx-8 mt-8 mb-0 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-lg">
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
@@ -196,7 +206,7 @@ export default function Home() {
           </div>
         )}
 
-        <div className="p-8">
+        <div className="p-4 lg:p-8">
           {activeTab === 'dashboard' && (
             <Dashboard stats={stats} transactions={filteredTransactions} />
           )}
