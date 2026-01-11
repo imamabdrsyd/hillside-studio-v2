@@ -7,7 +7,7 @@ import Dashboard from '@/components/Dashboard'
 import Transactions from '@/components/Transactions'
 import { Transaction } from '@/types'
 import { calculateDashboardStats, sortByDate } from '@/lib/utils'
-import { supabase } from '@/lib/supabase'
+import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('dashboard')
@@ -15,6 +15,7 @@ export default function Home() {
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
+  const [supabaseConfigured, setSupabaseConfigured] = useState(false)
 
   // Fetch transactions from Supabase
   useEffect(() => {
@@ -38,6 +39,18 @@ export default function Home() {
 
   async function fetchTransactions() {
     try {
+      // Check if Supabase is configured
+      const configured = isSupabaseConfigured()
+      setSupabaseConfigured(configured)
+
+      if (!configured) {
+        console.warn('Supabase is not configured. Please set environment variables.')
+        setTransactions([])
+        setFilteredTransactions([])
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
@@ -59,6 +72,11 @@ export default function Home() {
 
   async function handleAddTransaction(transaction: Omit<Transaction, 'id'>) {
     try {
+      if (!supabaseConfigured) {
+        alert('⚠️ Supabase belum dikonfigurasi!\n\nSilakan tambahkan environment variables di Vercel:\n- NEXT_PUBLIC_SUPABASE_URL\n- NEXT_PUBLIC_SUPABASE_ANON_KEY\n\nLalu redeploy aplikasi.')
+        return
+      }
+
       const { data, error } = await supabase
         .from('transactions')
         .insert([transaction])
@@ -71,12 +89,17 @@ export default function Home() {
       alert('Transaction added successfully!')
     } catch (error) {
       console.error('Error adding transaction:', error)
-      alert('Failed to add transaction')
+      alert('Failed to add transaction. Check console for details.')
     }
   }
 
   async function handleEditTransaction(transaction: Transaction) {
     try {
+      if (!supabaseConfigured) {
+        alert('⚠️ Supabase belum dikonfigurasi!\n\nSilakan tambahkan environment variables di Vercel:\n- NEXT_PUBLIC_SUPABASE_URL\n- NEXT_PUBLIC_SUPABASE_ANON_KEY\n\nLalu redeploy aplikasi.')
+        return
+      }
+
       const { error } = await supabase
         .from('transactions')
         .update(transaction)
@@ -90,12 +113,17 @@ export default function Home() {
       alert('Transaction updated successfully!')
     } catch (error) {
       console.error('Error updating transaction:', error)
-      alert('Failed to update transaction')
+      alert('Failed to update transaction. Check console for details.')
     }
   }
 
   async function handleDeleteTransaction(id: string) {
     try {
+      if (!supabaseConfigured) {
+        alert('⚠️ Supabase belum dikonfigurasi!\n\nSilakan tambahkan environment variables di Vercel:\n- NEXT_PUBLIC_SUPABASE_URL\n- NEXT_PUBLIC_SUPABASE_ANON_KEY\n\nLalu redeploy aplikasi.')
+        return
+      }
+
       const { error } = await supabase
         .from('transactions')
         .delete()
@@ -107,7 +135,7 @@ export default function Home() {
       alert('Transaction deleted successfully!')
     } catch (error) {
       console.error('Error deleting transaction:', error)
-      alert('Failed to delete transaction')
+      alert('Failed to delete transaction. Check console for details.')
     }
   }
 
@@ -135,6 +163,38 @@ export default function Home() {
 
       <main className="flex-1 ml-64 min-h-screen">
         <Header onSearch={setSearchQuery} onExportPDF={handleExportPDF} />
+
+        {/* Supabase Configuration Warning */}
+        {!supabaseConfigured && (
+          <div className="mx-8 mt-8 mb-0 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-semibold text-amber-800">
+                  Supabase Belum Dikonfigurasi
+                </h3>
+                <div className="mt-2 text-sm text-amber-700">
+                  <p>Aplikasi berjalan dalam mode demo. Untuk menggunakan fitur database:</p>
+                  <ol className="list-decimal list-inside mt-2 space-y-1">
+                    <li>Buka project di <strong>Vercel Dashboard</strong></li>
+                    <li>Pergi ke <strong>Settings → Environment Variables</strong></li>
+                    <li>Tambahkan:
+                      <ul className="list-disc list-inside ml-5 mt-1">
+                        <li><code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_SUPABASE_URL</code></li>
+                        <li><code className="bg-amber-100 px-1 rounded">NEXT_PUBLIC_SUPABASE_ANON_KEY</code></li>
+                      </ul>
+                    </li>
+                    <li>Redeploy aplikasi</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="p-8">
           {activeTab === 'dashboard' && (
