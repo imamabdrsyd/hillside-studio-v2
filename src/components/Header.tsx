@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 
 interface HeaderProps {
   onSearch: (query: string) => void
@@ -23,8 +24,23 @@ export default function Header({ onSearch, onExportPDF, onMenuToggle }: HeaderPr
 
   return (
     <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200 px-4 lg:px-8 py-4 flex items-center justify-between sticky top-0 z-40">
-      {/* Left side: Hamburger + Search */}
+      {/* Left side: Logo + Hamburger + Search */}
       <div className="flex items-center gap-3 flex-1">
+        {/* Logo */}
+        <div className="flex items-center gap-2">
+          <Image
+            src="/picture/hillside-logo.png"
+            alt="Hillside Studio"
+            width={40}
+            height={40}
+            className="w-8 h-8 lg:w-10 lg:h-10 object-contain"
+            priority
+          />
+          <span className="hidden md:block font-bold text-slate-700 text-sm lg:text-base">
+            Hillside Studio
+          </span>
+        </div>
+
         {/* Hamburger Menu Button (Mobile only) */}
         <button
           onClick={onMenuToggle}
