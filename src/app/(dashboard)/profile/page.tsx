@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { RoleBadge } from '@/components/auth/RoleBadge'
@@ -11,9 +11,16 @@ export default function ProfilePage() {
   const { user, profile, updateProfile, refreshProfile } = useAuth()
   const router = useRouter()
 
-  const [fullName, setFullName] = useState(profile?.full_name || '')
+  const [fullName, setFullName] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  // Update fullName when profile loads
+  useEffect(() => {
+    if (profile?.full_name) {
+      setFullName(profile.full_name)
+    }
+  }, [profile])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

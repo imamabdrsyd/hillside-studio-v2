@@ -28,7 +28,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         {/* Footer */}
         <p className="text-center text-xs text-slate-400 mt-6">
-          © 2024 Hillside Studio. All rights reserved.
+          © 2025 Imam Hillside Studio. All rights reserved.
         </p>
       </div>
     </div>
