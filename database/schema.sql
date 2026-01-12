@@ -26,13 +26,22 @@ CREATE INDEX IF NOT EXISTS profiles_role_idx ON profiles(role);
 -- ============================================
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  user_role TEXT;
 BEGIN
+  -- Set role based on email
+  IF NEW.email = 'imam.isyida@gmail.com' THEN
+    user_role := 'managing_director';
+  ELSE
+    user_role := 'investor';
+  END IF;
+
   INSERT INTO public.profiles (id, email, full_name, role)
   VALUES (
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
-    'investor'
+    user_role
   );
   RETURN NEW;
 END;
@@ -137,7 +146,15 @@ GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT ALL ON profiles TO authenticated;
 
 -- ============================================
--- 10. Test Queries (Optional - for verification)
+-- 10. Update existing imam.isyida@gmail.com to managing_director
+-- ============================================
+-- Update role for imam.isyida@gmail.com if already exists
+UPDATE profiles
+SET role = 'managing_director'
+WHERE email = 'imam.isyida@gmail.com';
+
+-- ============================================
+-- 11. Test Queries (Optional - for verification)
 -- ============================================
 -- To verify the setup, run:
 -- SELECT * FROM profiles;
