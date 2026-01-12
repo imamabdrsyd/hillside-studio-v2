@@ -57,6 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize auth state
   useEffect(() => {
+    let mounted = true
+
     const initializeAuth = async () => {
       try {
         // Get current session
@@ -64,6 +66,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: { session },
         } = await supabase.auth.getSession()
 
+        if (mounted) {
+          if (session?.user) {
+            const profile = await fetchProfile(session.user.id)
+            setState({
+              user: session.user,
+              profile,
+              loading: false,
+              initialized: true,
+            })
+          } else {
+            setState({
+              user: null,
+              profile: null,
+              loading: false,
+              initialized: true,
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error)
+        if (mounted) {
+          setState({
+            user: null,
+            profile: null,
+            loading: false,
+            initialized: true,
+          })
+        }
+      }
+    }
+
+    initializeAuth()
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event)
+
+      if (mounted) {
         if (session?.user) {
           const profile = await fetchProfile(session.user.id)
           setState({
@@ -80,44 +122,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             initialized: true,
           })
         }
-      } catch (error) {
-        console.error('Error initializing auth:', error)
-        setState({
-          user: null,
-          profile: null,
-          loading: false,
-          initialized: true,
-        })
-      }
-    }
-
-    initializeAuth()
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event)
-
-      if (session?.user) {
-        const profile = await fetchProfile(session.user.id)
-        setState({
-          user: session.user,
-          profile,
-          loading: false,
-          initialized: true,
-        })
-      } else {
-        setState({
-          user: null,
-          profile: null,
-          loading: false,
-          initialized: true,
-        })
       }
     })
 
     return () => {
+      mounted = false
       subscription.unsubscribe()
     }
   }, [])
