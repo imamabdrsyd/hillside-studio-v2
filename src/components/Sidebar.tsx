@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 interface SidebarProps {
   activeTab: string
   onTabChange: (tab: string) => void
@@ -43,8 +45,15 @@ export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }: Sid
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-emerald-500/30">
-          🏔️
+        <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 p-2">
+          <Image
+            src="/picture/hillside-silhouette.png"
+            alt="Hillside Studio"
+            width={44}
+            height={44}
+            className="w-full h-full object-contain"
+            priority
+          />
         </div>
         <div>
           <h1 className="text-lg font-bold text-slate-800">Hillside Studio</h1>
