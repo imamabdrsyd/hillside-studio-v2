@@ -154,7 +154,28 @@ SET role = 'managing_director'
 WHERE email = 'imam.isyida@gmail.com';
 
 -- ============================================
--- 11. Test Queries (Optional - for verification)
+-- 11. Create Test Accounts
+-- ============================================
+-- NOTE: To create test accounts, use the application's register page
+-- or Supabase Dashboard → Authentication → Add User
+--
+-- Test Account Credentials (create via register page):
+-- 1. Director Account:
+--    Email: imam.isyida@gmail.com
+--    Password: (set your own)
+--    Role: Will automatically be 'managing_director'
+--
+-- 2. Investor Account:
+--    Email: investor@hillsidestudio.id
+--    Password: Investor123
+--    Role: Will automatically be 'investor'
+--
+-- After creating via register page, the trigger will automatically:
+-- - Create profile with correct role
+-- - Send verification email
+
+-- ============================================
+-- 12. Test Queries (Optional - for verification)
 -- ============================================
 -- To verify the setup, run:
 -- SELECT * FROM profiles;

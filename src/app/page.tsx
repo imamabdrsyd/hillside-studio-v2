@@ -1,22 +1,25 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function RootPage() {
   const router = useRouter()
-  const { user, loading } = useAuth()
+  const { user, loading, initialized } = useAuth()
+  const [hasRedirected, setHasRedirected] = useState(false)
 
   useEffect(() => {
-    if (!loading) {
+    // Only redirect once auth is initialized and we haven't redirected yet
+    if (initialized && !hasRedirected) {
+      setHasRedirected(true)
       if (user) {
-        router.push('/dashboard')
+        router.replace('/dashboard')
       } else {
-        router.push('/login')
+        router.replace('/login')
       }
     }
-  }, [user, loading, router])
+  }, [user, initialized, hasRedirected, router])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">

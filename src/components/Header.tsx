@@ -157,7 +157,13 @@ export default function Header({ onSearch, onExportPDF, onMenuToggle }: HeaderPr
 
                 {/* Menu Items */}
                 <div className="py-1">
-                  <button className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false)
+                      window.location.href = '/profile'
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-3"
+                  >
                     <svg
                       className="w-5 h-5 text-slate-400"
                       fill="none"
