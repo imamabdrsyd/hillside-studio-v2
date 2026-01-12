@@ -103,12 +103,23 @@ Dokumen ini berisi petunjuk lengkap untuk mengimplementasikan sistem autentikasi
    ```bash
    touch .env.local
    ```
-3. Isi file `.env.local` dengan:
+3. Isi file `.env.local` dengan format dari Supabase (gunakan salah satu):
+
+   **Format Baru (Recommended)** - dari "Connect" button:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=sb_publishable_...
+   ```
+
+   **Format Lama (Masih Support)** - dari API Keys page:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
    ```
+
    ⚠️ **Ganti** dengan URL dan Key dari Supabase Anda!
+
+   📝 **Note**: Code sudah support kedua format. Jika Supabase link ke Vercel, gunakan format baru (`PUBLISHABLE_DEFAULT_KEY`).
 
 4. Restart development server:
    ```bash
