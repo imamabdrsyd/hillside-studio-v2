@@ -94,7 +94,7 @@ export const canViewFinancials = (role: UserRole): boolean => {
 
 // Role Display Names
 export const roleDisplayNames: Record<UserRole, string> = {
-  managing_director: 'Managing Director',
+  managing_director: 'Director',
   investor: 'Investor',
   guest: 'Guest',
 }
