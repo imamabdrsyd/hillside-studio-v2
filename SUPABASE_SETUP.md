@@ -77,12 +77,24 @@ Dokumen ini berisi petunjuk lengkap untuk mengimplementasikan sistem autentikasi
 
 ### Step 1: Ambil API Keys dari Supabase
 
-1. Di dashboard Supabase, klik ⚙️ **"Settings"** (pojok kiri bawah)
-2. Klik **"API"** di menu settings
-3. Scroll ke section **"Project API keys"**
-4. Copy 2 values ini:
-   - **Project URL** (contoh: https://xxxxx.supabase.co)
-   - **anon public** key (string panjang yang dimulai dengan "eyJ...")
+**CARA 1: Via Project Settings → API Keys (Recommended)**
+
+1. Di dashboard Supabase, klik ⚙️ **"Project Settings"** di sidebar kiri (pojok bawah)
+2. Klik **"API Keys"** di menu Data API
+3. Copy 2 values ini:
+   - **Project URL** (contoh: https://xxxxx.supabase.co) - Ada di bagian "Config"
+   - **anon public** key - Ada di section "Project API keys" (string panjang yang dimulai dengan "eyJ...")
+
+**CARA 2: Via Home Dashboard (Alternatif)**
+
+1. Dari dashboard utama project Supabase
+2. Klik **"Connect"** button (pojok kanan atas)
+3. Pilih tab **"App Frameworks"** atau **"JavaScript"**
+4. Copy **Project URL** dan **anon key** yang ditampilkan
+
+**PENTING**:
+- Jangan copy `service_role` key (secret key), gunakan hanya **`anon`/`public`** key
+- Project URL format: `https://[project-ref].supabase.co`
 
 ### Step 2: Setup Local Development (.env.local)
 
@@ -91,12 +103,23 @@ Dokumen ini berisi petunjuk lengkap untuk mengimplementasikan sistem autentikasi
    ```bash
    touch .env.local
    ```
-3. Isi file `.env.local` dengan:
+3. Isi file `.env.local` dengan format dari Supabase (gunakan salah satu):
+
+   **Format Baru (Recommended)** - dari "Connect" button:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=sb_publishable_...
+   ```
+
+   **Format Lama (Masih Support)** - dari API Keys page:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
    ```
+
    ⚠️ **Ganti** dengan URL dan Key dari Supabase Anda!
+
+   📝 **Note**: Code sudah support kedua format. Jika Supabase link ke Vercel, gunakan format baru (`PUBLISHABLE_DEFAULT_KEY`).
 
 4. Restart development server:
    ```bash
