@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { checkAuth, successResponse } from '@/lib/api/helpers'
+import { successResponse } from '@/lib/api/helpers'
+import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { supabase } = await checkAuth()
+    const supabase = createClient()
 
-    // Sign out user
+    // Sign out user (will not fail if already logged out)
     await supabase.auth.signOut()
 
     return successResponse({ success: true })
