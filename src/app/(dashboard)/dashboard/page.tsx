@@ -16,37 +16,55 @@ export default function DashboardPage() {
 
   // Fetch transactions from Supabase
   useEffect(() => {
-    fetchTransactions()
-  }, [])
+    let isMounted = true
 
-  async function fetchTransactions() {
-    try {
-      // Check if Supabase is configured
-      const configured = isSupabaseConfigured()
-      setSupabaseConfigured(configured)
+    const fetchTransactions = async () => {
+      try {
+        // Check if Supabase is configured
+        const configured = isSupabaseConfigured()
 
-      if (!configured) {
-        console.warn('Supabase is not configured. Please set environment variables.')
-        setTransactions([])
-        setLoading(false)
-        return
+        if (isMounted) {
+          setSupabaseConfigured(configured)
+        }
+
+        if (!configured) {
+          console.warn('Supabase is not configured. Please set environment variables.')
+          if (isMounted) {
+            setTransactions([])
+            setLoading(false)
+          }
+          return
+        }
+
+        const { data, error } = await (supabase
+          .from('transactions') as any)
+          .select('*')
+          .order('date', { ascending: false })
+
+        if (error) throw error
+
+        if (isMounted) {
+          setTransactions(data || [])
+        }
+      } catch (error) {
+        console.error('Error fetching transactions:', error)
+        if (isMounted) {
+          setTransactions([])
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
       }
-
-      const { data, error } = await (supabase
-        .from('transactions') as any)
-        .select('*')
-        .order('date', { ascending: false })
-
-      if (error) throw error
-
-      setTransactions(data || [])
-    } catch (error) {
-      console.error('Error fetching transactions:', error)
-      setTransactions([])
-    } finally {
-      setLoading(false)
     }
-  }
+
+    fetchTransactions()
+
+    // Cleanup function to prevent state updates on unmounted component
+    return () => {
+      isMounted = false
+    }
+  }, []) // Empty dependency array - run once on mount
 
   const stats = calculateDashboardStats(transactions)
 
