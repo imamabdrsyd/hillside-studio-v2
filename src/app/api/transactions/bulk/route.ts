@@ -7,21 +7,22 @@ const VALID_CATEGORIES = ['EARN', 'OPEX', 'VAR', 'CAPEX', 'TAX', 'FIN']
 // DELETE /api/transactions/bulk - Bulk delete transactions by category (Managing Director only)
 export async function DELETE(request: NextRequest) {
   try {
-    const { error, user, profile, supabase } = await checkAuth()
-    if (error) return error
-    if (!supabase || !user) return errorResponse('Unauthorized', 401)
+    const authResult = await checkAuth()
+    if (authResult.error) return authResult.error
+    if (!authResult.supabase || !authResult.user) return errorResponse('Unauthorized', 401)
 
     // Check role
-    const userRole = profile?.role as string | undefined
-    const roleError = checkRole(userRole, 'managing_director')
+    const roleError = checkRole(authResult.profile?.role, 'managing_director')
     if (roleError) return roleError
+
+    const { supabase } = authResult
 
     const body = await request.json()
     const { category, year, ids } = body
 
     // Option 1: Delete by IDs
     if (ids && Array.isArray(ids) && ids.length > 0) {
-      const { error: deleteError, count } = await (supabase
+      const { error: deleteError } = await (supabase
         .from('transactions') as any)
         .delete()
         .in('id', ids)
@@ -48,14 +49,12 @@ export async function DELETE(request: NextRequest) {
         return errorResponse('Year is required when deleting by category', 400)
       }
 
-      let query = (supabase
+      const { error: deleteError } = await (supabase
         .from('transactions') as any)
         .delete()
         .eq('category', category)
         .gte('date', `${year}-01-01`)
         .lte('date', `${year}-12-31`)
-
-      const { error: deleteError } = await query
 
       if (deleteError) {
         console.error('Bulk delete error:', deleteError)
@@ -78,14 +77,15 @@ export async function DELETE(request: NextRequest) {
 // POST /api/transactions/bulk - Bulk create transactions (Managing Director only)
 export async function POST(request: NextRequest) {
   try {
-    const { error, user, profile, supabase } = await checkAuth()
-    if (error) return error
-    if (!supabase || !user) return errorResponse('Unauthorized', 401)
+    const authResult = await checkAuth()
+    if (authResult.error) return authResult.error
+    if (!authResult.supabase || !authResult.user) return errorResponse('Unauthorized', 401)
 
     // Check role
-    const userRole = profile?.role as string | undefined
-    const roleError = checkRole(userRole, 'managing_director')
+    const roleError = checkRole(authResult.profile?.role, 'managing_director')
     if (roleError) return roleError
+
+    const { supabase, user } = authResult
 
     const body = await request.json()
     const { transactions } = body

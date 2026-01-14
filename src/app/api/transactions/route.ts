@@ -71,14 +71,15 @@ export async function GET(request: NextRequest) {
 // POST /api/transactions - Create new transaction (Managing Director only)
 export async function POST(request: NextRequest) {
   try {
-    const { error, user, profile, supabase } = await checkAuth()
-    if (error) return error
-    if (!supabase || !user) return errorResponse('Unauthorized', 401)
+    const authResult = await checkAuth()
+    if (authResult.error) return authResult.error
+    if (!authResult.supabase || !authResult.user) return errorResponse('Unauthorized', 401)
 
     // Check role
-    const userRole = profile?.role as string | undefined
-    const roleError = checkRole(userRole, 'managing_director')
+    const roleError = checkRole(authResult.profile?.role, 'managing_director')
     if (roleError) return roleError
+
+    const { supabase, user } = authResult
 
     const body = await request.json()
     const { date, category, description, income, expense, account, notes } = body
