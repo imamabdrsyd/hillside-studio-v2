@@ -27,16 +27,31 @@ export default function ProfilePage() {
     setMessage(null)
     setLoading(true)
 
-    const { error } = await updateProfile({ full_name: fullName })
+    try {
+      // Use API endpoint instead of direct Supabase call
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ full_name: fullName })
+      })
 
-    if (error) {
-      setMessage({ type: 'error', text: error.message })
-    } else {
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update profile')
+      }
+
       setMessage({ type: 'success', text: 'Profile updated successfully!' })
-      await refreshProfile()
-    }
 
-    setLoading(false)
+      // Refresh profile after successful update
+      setTimeout(() => {
+        refreshProfile()
+      }, 500)
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message })
+    } finally {
+      setLoading(false)
+    }
   }
 
   const getInitials = (name?: string | null) => {
