@@ -48,7 +48,8 @@ export async function PUT(
     if (!supabase || !user) return errorResponse('Unauthorized', 401)
 
     // Check role
-    const roleError = checkRole(profile?.role, 'managing_director')
+    const userRole = profile?.role as string | undefined
+    const roleError = checkRole(userRole, 'managing_director')
     if (roleError) return roleError
 
     const { id } = params
@@ -119,7 +120,8 @@ export async function DELETE(
     if (!supabase || !user) return errorResponse('Unauthorized', 401)
 
     // Check role
-    const roleError = checkRole(profile?.role, 'managing_director')
+    const userRole = profile?.role as string | undefined
+    const roleError = checkRole(userRole, 'managing_director')
     if (roleError) return roleError
 
     const { id } = params
