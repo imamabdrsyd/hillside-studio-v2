@@ -1,7 +1,29 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import type { User } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
-export async function checkAuth() {
+type Profile = {
+  id: string
+  role?: string | null
+  [key: string]: any
+}
+
+type AuthResult =
+  | {
+      error: NextResponse
+      user: null
+      profile: null
+      supabase?: never
+    }
+  | {
+      error: null
+      user: User
+      profile: Profile | null
+      supabase: SupabaseClient
+    }
+
+export async function checkAuth(): Promise<AuthResult> {
   const supabase = createClient()
 
   const { data: { user }, error: authError } = await supabase.auth.getUser()
