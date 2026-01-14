@@ -17,8 +17,9 @@ export async function GET(request: NextRequest) {
 // PUT /api/profile - Update user's profile
 export async function PUT(request: NextRequest) {
   try {
-    const { error, user, profile, supabase } = await checkAuth()
+    const { error, user, supabase } = await checkAuth()
     if (error) return error
+    if (!supabase || !user) return errorResponse('Unauthorized', 401)
 
     const body = await request.json()
     const { full_name } = body
@@ -29,7 +30,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update profile
-    const updateData: any = {
+    const updateData: { updated_at: string; full_name?: string } = {
       updated_at: new Date().toISOString()
     }
 
@@ -37,10 +38,10 @@ export async function PUT(request: NextRequest) {
       updateData.full_name = full_name.trim()
     }
 
-    const { data: updatedProfile, error: updateError } = await supabase
-      .from('profiles')
+    const { data: updatedProfile, error: updateError } = await (supabase
+      .from('profiles') as any)
       .update(updateData)
-      .eq('id', user?.id)
+      .eq('id', user.id)
       .select()
       .single()
 
