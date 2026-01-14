@@ -4,6 +4,16 @@ import Image from 'next/image'
 import { useAuth } from '@/contexts/AuthContext'
 import { RoleBadge } from './auth/RoleBadge'
 import { canViewTransactions } from '@/types/auth'
+import {
+  LayoutDashboard,
+  Receipt,
+  FileText,
+  DollarSign,
+  Scale,
+  ArrowRightLeft,
+  TrendingUp,
+  LogOut
+} from 'lucide-react'
 
 interface SidebarProps {
   activeTab: string
@@ -12,17 +22,27 @@ interface SidebarProps {
   onClose: () => void
 }
 
+const iconMap = {
+  dashboard: LayoutDashboard,
+  transactions: Receipt,
+  reports: FileText,
+  income: DollarSign,
+  balance: Scale,
+  cashflow: ArrowRightLeft,
+  forecast: TrendingUp,
+}
+
 export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }: SidebarProps) {
   const { user, profile, signOut } = useAuth()
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊', group: 'Overview' },
-    { id: 'transactions', label: 'Transactions', icon: '📋', group: 'Overview', requiresRole: 'managing_director' },
-    { id: 'reports', label: 'Reports', icon: '📈', group: 'Overview' },
-    { id: 'income', label: 'Income Statement', icon: '💰', group: 'Financial Statements' },
-    { id: 'balance', label: 'Balance Sheet', icon: '⚖️', group: 'Financial Statements' },
-    { id: 'cashflow', label: 'Cash Flow', icon: '💵', group: 'Financial Statements' },
-    { id: 'forecast', label: 'ROI & Forecast', icon: '🔮', group: 'Analysis' },
+    { id: 'dashboard', label: 'Dashboard', group: 'Overview' },
+    { id: 'transactions', label: 'Transactions', group: 'Overview', requiresRole: 'managing_director' },
+    { id: 'reports', label: 'Reports', group: 'Overview' },
+    { id: 'income', label: 'Income Statement', group: 'Financial Statements' },
+    { id: 'balance', label: 'Balance Sheet', group: 'Financial Statements' },
+    { id: 'cashflow', label: 'Cash Flow', group: 'Financial Statements' },
+    { id: 'forecast', label: 'ROI & Forecast', group: 'Analysis' },
   ]
 
   const groups = ['Overview', 'Financial Statements', 'Analysis']
@@ -100,20 +120,23 @@ export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }: Sid
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">
                 {group}
               </p>
-              {groupItems.map(item => (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                    activeTab === item.id
-                      ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                      : 'text-slate-500 hover:bg-slate-50'
-                  }`}
-                >
-                  <span>{item.icon}</span>
-                  <span>{item.label}</span>
-                </button>
-              ))}
+              {groupItems.map(item => {
+                const Icon = iconMap[item.id as keyof typeof iconMap]
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavClick(item.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      activeTab === item.id
+                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                        : 'text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" strokeWidth={1.5} />
+                    <span>{item.label}</span>
+                  </button>
+                )
+              })}
             </div>
           )
         })}
@@ -139,19 +162,7 @@ export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }: Sid
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-            />
-          </svg>
+          <LogOut className="w-5 h-5" strokeWidth={1.5} />
           <span>Logout</span>
         </button>
       </div>
