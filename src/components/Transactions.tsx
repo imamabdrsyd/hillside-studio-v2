@@ -109,7 +109,7 @@ export default function Transactions({ transactions, onAdd, onEdit, onDelete }: 
             onClick={() => setFilterCategory(cat.value as TransactionCategory)}
             className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
               filterCategory === cat.value
-                ? `bg-${cat.color}-500 text-white`
+                ? getCategoryButtonClass(cat.value)
                 : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
             }`}
           >
@@ -357,4 +357,16 @@ function getCategoryClass(category: string) {
     FIN: 'bg-indigo-100 text-indigo-700',
   }
   return classes[category] || 'bg-gray-100 text-gray-700'
+}
+
+function getCategoryButtonClass(category: string) {
+  const classes: Record<string, string> = {
+    EARN: 'bg-green-500 text-white',
+    OPEX: 'bg-red-500 text-white',
+    VAR: 'bg-purple-500 text-white',
+    CAPEX: 'bg-gray-500 text-white',
+    TAX: 'bg-blue-500 text-white',
+    FIN: 'bg-indigo-500 text-white',
+  }
+  return classes[category] || 'bg-gray-500 text-white'
 }
