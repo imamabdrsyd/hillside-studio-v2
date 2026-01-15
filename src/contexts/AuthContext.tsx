@@ -68,6 +68,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (mounted) {
           if (session?.user) {
+            // Save token to localStorage if available
+            if (session.access_token) {
+              localStorage.setItem('auth_token', session.access_token)
+            }
+
             const profile = await fetchProfile(session.user.id)
             setState({
               user: session.user,
@@ -76,6 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               initialized: true,
             })
           } else {
+            // Clear token if no session
+            localStorage.removeItem('auth_token')
             setState({
               user: null,
               profile: null,
@@ -87,6 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Error initializing auth:', error)
         if (mounted) {
+          localStorage.removeItem('auth_token')
           setState({
             user: null,
             profile: null,
@@ -107,6 +115,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (mounted) {
         if (session?.user) {
+          // Save token to localStorage when auth state changes
+          if (session.access_token) {
+            localStorage.setItem('auth_token', session.access_token)
+          }
+
           const profile = await fetchProfile(session.user.id)
           setState({
             user: session.user,
@@ -115,6 +128,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             initialized: true,
           })
         } else {
+          // Clear token when signed out
+          localStorage.removeItem('auth_token')
           setState({
             user: null,
             profile: null,
@@ -157,12 +172,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sign in existing user
   const signIn = async (data: SignInData): Promise<{ error: Error | null }> => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: sessionData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       })
 
       if (error) throw error
+
+      // Save token to localStorage
+      if (sessionData?.session?.access_token) {
+        localStorage.setItem('auth_token', sessionData.session.access_token)
+        console.log('Token saved to localStorage')
+      }
 
       return { error: null }
     } catch (error) {
@@ -175,6 +196,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       await supabase.auth.signOut()
+      // Clear token from localStorage
+      localStorage.removeItem('auth_token')
       setState({
         user: null,
         profile: null,
