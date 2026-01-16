@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 import { checkAuth, errorResponse, successResponse } from '@/lib/api/helpers'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/reports/income-statement - Get income statement (Laba Rugi)
 export async function GET(request: NextRequest) {
   try {

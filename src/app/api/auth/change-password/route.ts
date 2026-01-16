@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkAuth, errorResponse, successResponse } from '@/lib/api/helpers'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const { error, user, supabase } = await checkAuth()

@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 import { checkAuth, errorResponse, successResponse } from '@/lib/api/helpers'
 import { INITIAL_CAPITAL } from '@/lib/constants'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/forecast - Get ROI & forecast projections
 export async function GET(request: NextRequest) {
   try {
