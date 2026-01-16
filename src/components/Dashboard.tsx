@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement } from 'chart.js'
 import { Bar, Doughnut, Line } from 'react-chartjs-2'
 import { Transaction, DashboardStats } from '@/types'
@@ -15,6 +16,13 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ stats, transactions }: DashboardProps) {
+  const router = useRouter()
+
+  // Navigate to transactions page with category filter
+  const handleCardClick = (category: string) => {
+    router.push(`/transactions?category=${category}`)
+  }
+
   // Monthly revenue vs expenses
   const monthlyData = {
     labels: MONTH_SHORT,
@@ -86,6 +94,8 @@ export default function Dashboard({ stats, transactions }: DashboardProps) {
           icon="💰"
           bgColor="bg-green-100"
           textColor="text-green-700"
+          onClick={() => handleCardClick('EARN')}
+          clickable
         />
         <StatCard
           title="Operational"
@@ -94,6 +104,8 @@ export default function Dashboard({ stats, transactions }: DashboardProps) {
           icon="🏢"
           bgColor="bg-red-100"
           textColor="text-red-700"
+          onClick={() => handleCardClick('OPEX')}
+          clickable
         />
         <StatCard
           title="Variable Cost"
@@ -102,6 +114,8 @@ export default function Dashboard({ stats, transactions }: DashboardProps) {
           icon="📦"
           bgColor="bg-purple-100"
           textColor="text-purple-700"
+          onClick={() => handleCardClick('VAR')}
+          clickable
         />
         <StatCard
           title="Taxes"
@@ -110,6 +124,8 @@ export default function Dashboard({ stats, transactions }: DashboardProps) {
           icon="🏛️"
           bgColor="bg-blue-100"
           textColor="text-blue-700"
+          onClick={() => handleCardClick('TAX')}
+          clickable
         />
         <StatCard
           title="Net Profit"
@@ -217,9 +233,16 @@ export default function Dashboard({ stats, transactions }: DashboardProps) {
   )
 }
 
-function StatCard({ title, value, label, icon, bgColor, textColor }: any) {
+function StatCard({ title, value, label, icon, bgColor, textColor, onClick, clickable }: any) {
   return (
-    <div className="stat-card bg-white rounded-2xl p-5 shadow-sm border border-slate-100 transition-all">
+    <div
+      className={`stat-card bg-white rounded-2xl p-5 shadow-sm border border-slate-100 transition-all ${
+        clickable ? 'cursor-pointer hover:shadow-lg hover:scale-105 hover:border-slate-300' : ''
+      }`}
+      onClick={onClick}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+    >
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-semibold text-slate-400 uppercase">{title}</span>
         <span className={`w-8 h-8 ${bgColor} rounded-lg flex items-center justify-center`}>{icon}</span>
