@@ -211,21 +211,21 @@ export default function ProfileSettingsModal({ isOpen, onClose }: ProfileSetting
 
         {/* Profile Photo Section */}
         <div className="mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col items-center gap-4">
             {/* Avatar Preview */}
             <div className="relative">
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-emerald-100 flex items-center justify-center">
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-emerald-100 flex items-center justify-center ring-4 ring-white shadow-lg">
                 {previewUrl ? (
                   <Image
                     src={previewUrl}
                     alt="Profile"
-                    width={80}
-                    height={80}
+                    width={96}
+                    height={96}
                     className="w-full h-full object-cover"
                     unoptimized
                   />
                 ) : (
-                  <span className="text-2xl font-bold text-emerald-600">
+                  <span className="text-3xl font-bold text-emerald-600">
                     {getInitials(profile?.full_name)}
                   </span>
                 )}
@@ -235,35 +235,48 @@ export default function ProfileSettingsModal({ isOpen, onClose }: ProfileSetting
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingAvatar}
-                className="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white hover:bg-emerald-600 transition-colors shadow-lg disabled:opacity-50"
+                className="absolute -bottom-1 -right-1 w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center text-white hover:bg-emerald-600 transition-colors shadow-lg disabled:opacity-50 ring-4 ring-white"
               >
                 <Camera className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Info & Actions */}
-            <div className="flex-1">
+            {/* Info */}
+            <div className="text-center">
               <p className="font-semibold text-slate-800">{profile?.full_name || 'User'}</p>
               <p className="text-sm text-slate-500 truncate">{user?.email}</p>
               {profile?.role && (
-                <div className="mt-1">
+                <div className="mt-1 flex justify-center">
                   <RoleBadge role={profile.role} size="sm" />
                 </div>
               )}
             </div>
 
-            {/* Remove avatar button */}
-            {(previewUrl || profile?.avatar_url) && (
+            {/* Action Buttons */}
+            <div className="flex gap-2 w-full">
               <button
                 type="button"
-                onClick={handleRemoveAvatar}
+                onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingAvatar}
-                className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                title="Hapus foto"
+                className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <Trash2 className="w-5 h-5" />
+                <Camera className="w-4 h-4" />
+                {selectedFile ? 'Ganti Foto' : 'Pilih Foto'}
               </button>
-            )}
+
+              {(previewUrl || profile?.avatar_url) && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  disabled={uploadingAvatar}
+                  className="px-4 py-2 text-red-500 border border-red-200 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  title="Hapus foto"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Hapus
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Hidden file input */}
@@ -277,14 +290,16 @@ export default function ProfileSettingsModal({ isOpen, onClose }: ProfileSetting
 
           {/* Upload hint */}
           <p className="mt-3 text-xs text-slate-500 text-center">
-            Klik ikon kamera untuk mengganti foto. Max 2MB (JPG, PNG, WEBP)
+            Max 2MB (JPG, PNG, WEBP)
           </p>
 
           {/* Selected file indicator */}
           {selectedFile && (
-            <p className="mt-2 text-xs text-emerald-600 text-center">
-              Foto baru dipilih: {selectedFile.name}
-            </p>
+            <div className="mt-2 p-2 bg-emerald-50 rounded-lg border border-emerald-200">
+              <p className="text-xs text-emerald-700 text-center font-medium">
+                ✓ Foto baru dipilih: {selectedFile.name}
+              </p>
+            </div>
           )}
         </div>
 
