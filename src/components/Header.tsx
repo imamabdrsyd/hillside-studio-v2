@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useAuth } from '@/contexts/AuthContext'
 import { RoleBadge } from './auth/RoleBadge'
-import ProfileSettingsModal from './modals/ProfileSettingsModal'
-import ChangePasswordModal from './modals/ChangePasswordModal'
 
 interface HeaderProps {
   onSearch: (query: string) => void
@@ -16,8 +14,6 @@ interface HeaderProps {
 export default function Header({ onSearch, onExportPDF, onMenuToggle }: HeaderProps) {
   const [currentDate, setCurrentDate] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [showProfileModal, setShowProfileModal] = useState(false)
-  const [showPasswordModal, setShowPasswordModal] = useState(false)
   const { user, profile, signOut } = useAuth()
 
   useEffect(() => {
@@ -164,7 +160,7 @@ export default function Header({ onSearch, onExportPDF, onMenuToggle }: HeaderPr
                   <button
                     onClick={() => {
                       setShowUserMenu(false)
-                      setShowProfileModal(true)
+                      window.location.href = '/profile'
                     }}
                     className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-3"
                   >
@@ -183,13 +179,7 @@ export default function Header({ onSearch, onExportPDF, onMenuToggle }: HeaderPr
                     </svg>
                     <span>Profile Settings</span>
                   </button>
-                  <button
-                    onClick={() => {
-                      setShowUserMenu(false)
-                      setShowPasswordModal(true)
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-3"
-                  >
+                  <button className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-3">
                     <svg
                       className="w-5 h-5 text-slate-400"
                       fill="none"
@@ -234,16 +224,6 @@ export default function Header({ onSearch, onExportPDF, onMenuToggle }: HeaderPr
           )}
         </div>
       </div>
-
-      {/* Modals */}
-      <ProfileSettingsModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-      />
-      <ChangePasswordModal
-        isOpen={showPasswordModal}
-        onClose={() => setShowPasswordModal(false)}
-      />
     </header>
   )
 }
