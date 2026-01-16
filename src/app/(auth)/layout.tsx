@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <h1 className="text-2xl font-bold text-slate-800">Hillside Studio</h1>
           </div>
           <p className="text-sm text-slate-500 font-medium">
-            Finance Management System v2
+            Finance Management System 
           </p>
         </div>
 
@@ -28,7 +28,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         {/* Footer */}
         <p className="text-center text-xs text-slate-400 mt-6">
-          © 2025 Imam Hillside Studio. All rights reserved.
+          © 2025 Imam Abdurasyid. All rights reserved.
         </p>
       </div>
     </div>

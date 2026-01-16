@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Transaction, TransactionCategory, AccountType } from '@/types'
 import { formatCurrency, formatDateInput } from '@/lib/utils'
 import { CATEGORIES, ACCOUNTS } from '@/lib/constants'
@@ -13,6 +14,7 @@ interface TransactionsProps {
 }
 
 export default function Transactions({ transactions, onAdd, onEdit, onDelete }: TransactionsProps) {
+  const searchParams = useSearchParams()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [filterCategory, setFilterCategory] = useState<TransactionCategory | 'ALL'>('ALL')
@@ -24,6 +26,14 @@ export default function Transactions({ transactions, onAdd, onEdit, onDelete }: 
     account: 'BCA' as AccountType,
     notes: '',
   })
+
+  // Set filter category based on query parameter
+  useEffect(() => {
+    const categoryParam = searchParams.get('category')
+    if (categoryParam && ['EARN', 'OPEX', 'VAR', 'TAX', 'CAPEX', 'FIN'].includes(categoryParam)) {
+      setFilterCategory(categoryParam as TransactionCategory)
+    }
+  }, [searchParams])
 
   const filteredTransactions = filterCategory === 'ALL'
     ? transactions

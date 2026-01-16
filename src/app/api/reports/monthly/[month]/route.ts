@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 import { checkAuth, errorResponse, successResponse } from '@/lib/api/helpers'
 import { MONTHS } from '@/lib/constants'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/reports/monthly/[month] - Get monthly report
 export async function GET(
   request: NextRequest,
