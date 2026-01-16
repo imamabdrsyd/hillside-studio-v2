@@ -154,7 +154,7 @@ src/
 | **Frontend** | Next.js 14, React 18, TypeScript |
 | **Backend** | Next.js API Routes, Supabase |
 | **Auth** | Supabase Auth |
-| **Database** | Supabase PostgreSQL |
+| **Database** | PostgreSQL, AWS |
 | **Hosting** | Vercel |
 
 ---
