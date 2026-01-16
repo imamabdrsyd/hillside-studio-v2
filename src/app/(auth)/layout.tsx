@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <h1 className="text-2xl font-bold text-slate-800">Hillside Studio</h1>
           </div>
           <p className="text-sm text-slate-500 font-medium">
-            Finance Management System v2
+            Finance Management System 
           </p>
         </div>
 
