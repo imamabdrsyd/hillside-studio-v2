@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { RoleBadge } from './auth/RoleBadge'
 
@@ -15,6 +16,7 @@ export default function Header({ onSearch, onExportPDF, onMenuToggle }: HeaderPr
   const [currentDate, setCurrentDate] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
   const { user, profile, signOut } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
     const date = new Date().toLocaleDateString('id-ID', {
@@ -160,7 +162,7 @@ export default function Header({ onSearch, onExportPDF, onMenuToggle }: HeaderPr
                   <button
                     onClick={() => {
                       setShowUserMenu(false)
-                      window.location.href = '/profile'
+                      router.push('/profile')
                     }}
                     className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-3"
                   >
