@@ -108,8 +108,19 @@ export default function Header({ onSearch, onExportPDF, onMenuToggle }: HeaderPr
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="flex items-center gap-2 lg:gap-3 px-2 lg:px-3 py-2 hover:bg-slate-100 rounded-lg transition-colors"
           >
-            <div className="w-8 h-8 lg:w-9 lg:h-9 bg-emerald-100 rounded-lg flex items-center justify-center font-bold text-emerald-600 text-xs lg:text-sm">
-              {getInitials(profile?.full_name)}
+            <div className="w-8 h-8 lg:w-9 lg:h-9 bg-emerald-100 rounded-lg flex items-center justify-center font-bold text-emerald-600 text-xs lg:text-sm overflow-hidden">
+              {profile?.avatar_url ? (
+                <Image
+                  src={profile.avatar_url}
+                  alt="Profile"
+                  width={36}
+                  height={36}
+                  className="w-full h-full object-cover"
+                  unoptimized
+                />
+              ) : (
+                getInitials(profile?.full_name)
+              )}
             </div>
             <div className="hidden lg:block text-left">
               <p className="text-sm font-semibold text-slate-700 truncate max-w-[120px]">
