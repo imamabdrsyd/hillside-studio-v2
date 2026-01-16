@@ -2,6 +2,8 @@ import { NextRequest } from 'next/server'
 import { checkAuth, errorResponse, successResponse } from '@/lib/api/helpers'
 import { INITIAL_CAPITAL } from '@/lib/constants'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/reports/cash-flow - Get cash flow statement (Arus Kas)
 export async function GET(request: NextRequest) {
   try {

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkAuth, checkRole, errorResponse, successResponse } from '@/lib/api/helpers'
 
+export const dynamic = 'force-dynamic'
+
 // Valid categories
 const VALID_CATEGORIES = ['EARN', 'OPEX', 'VAR', 'CAPEX', 'TAX', 'FIN']
 
