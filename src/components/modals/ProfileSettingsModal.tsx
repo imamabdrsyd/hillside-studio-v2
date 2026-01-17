@@ -210,58 +210,57 @@ export default function ProfileSettingsModal({ isOpen, onClose }: ProfileSetting
         </div>
 
         {/* Profile Photo Section */}
-        <div className="mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
-          <div className="flex flex-col items-center gap-4">
-            {/* Avatar Preview */}
+        <div className="mb-6">
+          {/* Avatar Preview */}
+          <div className="flex flex-col items-center gap-4 mb-4">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full overflow-hidden bg-emerald-100 flex items-center justify-center ring-4 ring-white shadow-lg">
+              <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center ring-4 ring-emerald-100 shadow-xl">
                 {previewUrl ? (
                   <Image
                     src={previewUrl}
                     alt="Profile"
-                    width={96}
-                    height={96}
+                    width={128}
+                    height={128}
                     className="w-full h-full object-cover"
                     unoptimized
                   />
                 ) : (
-                  <span className="text-3xl font-bold text-emerald-600">
+                  <span className="text-4xl font-bold text-emerald-600">
                     {getInitials(profile?.full_name)}
                   </span>
                 )}
               </div>
-              {/* Camera button overlay */}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingAvatar}
-                className="absolute -bottom-1 -right-1 w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center text-white hover:bg-emerald-600 transition-colors shadow-lg disabled:opacity-50 ring-4 ring-white"
-              >
-                <Camera className="w-4 h-4" />
-              </button>
             </div>
 
             {/* Info */}
             <div className="text-center">
-              <p className="font-semibold text-slate-800">{profile?.full_name || 'User'}</p>
-              <p className="text-sm text-slate-500 truncate">{user?.email}</p>
+              <p className="font-bold text-lg text-slate-800">{profile?.full_name || 'User'}</p>
+              <p className="text-sm text-slate-500">{user?.email}</p>
               {profile?.role && (
-                <div className="mt-1 flex justify-center">
+                <div className="mt-2 flex justify-center">
                   <RoleBadge role={profile.role} size="sm" />
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Upload Section */}
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border-2 border-emerald-200 p-6">
+            <div className="text-center mb-4">
+              <h3 className="font-bold text-slate-700 mb-1">Foto Profil</h3>
+              <p className="text-xs text-slate-500">Upload foto profil Anda (Max 2MB)</p>
+            </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-2 w-full">
+            <div className="flex flex-col gap-3">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingAvatar}
-                className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                <Camera className="w-4 h-4" />
-                {selectedFile ? 'Ganti Foto' : 'Pilih Foto'}
+                <Camera className="w-5 h-5" />
+                {selectedFile ? '📷 Ganti Foto Profil' : '📸 Upload Foto Profil'}
               </button>
 
               {(previewUrl || profile?.avatar_url) && (
@@ -269,38 +268,43 @@ export default function ProfileSettingsModal({ isOpen, onClose }: ProfileSetting
                   type="button"
                   onClick={handleRemoveAvatar}
                   disabled={uploadingAvatar}
-                  className="px-4 py-2 text-red-500 border border-red-200 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  title="Hapus foto"
+                  className="w-full px-6 py-2.5 text-red-600 border-2 border-red-300 bg-white hover:bg-red-50 rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:border-red-400"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Hapus
+                  Hapus Foto
                 </button>
               )}
             </div>
-          </div>
 
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
 
-          {/* Upload hint */}
-          <p className="mt-3 text-xs text-slate-500 text-center">
-            Max 2MB (JPG, PNG, WEBP)
-          </p>
-
-          {/* Selected file indicator */}
-          {selectedFile && (
-            <div className="mt-2 p-2 bg-emerald-50 rounded-lg border border-emerald-200">
-              <p className="text-xs text-emerald-700 text-center font-medium">
-                ✓ Foto baru dipilih: {selectedFile.name}
+            {/* Upload hint */}
+            <div className="mt-4 p-3 bg-white/80 rounded-lg border border-emerald-200">
+              <p className="text-xs text-slate-600 text-center">
+                ✓ Format: JPG, PNG, WEBP<br/>
+                ✓ Ukuran maksimal: 2MB
               </p>
             </div>
-          )}
+
+            {/* Selected file indicator */}
+            {selectedFile && (
+              <div className="mt-3 p-3 bg-emerald-100 rounded-lg border-2 border-emerald-300 animate-pulse">
+                <p className="text-sm text-emerald-800 text-center font-bold">
+                  ✓ Siap diupload: {selectedFile.name}
+                </p>
+                <p className="text-xs text-emerald-600 text-center mt-1">
+                  Klik "Simpan" di bawah untuk mengupload foto
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Message */}
