@@ -4,6 +4,7 @@ import { checkAuth, errorResponse, successResponse } from '@/lib/api/helpers'
 export const dynamic = 'force-dynamic'
 
 // GET /api/reports/income-statement - Get income statement (Laba Rugi)
+// Query params: month (01-12), year (2025), period (monthly/yearly)
 export async function GET(request: NextRequest) {
   try {
     const authResult = await checkAuth()
@@ -13,12 +14,42 @@ export async function GET(request: NextRequest) {
     const { supabase } = authResult
     const { searchParams } = new URL(request.url)
     const year = searchParams.get('year') || new Date().getFullYear().toString()
+    const month = searchParams.get('month') // "01" to "12" or null
+    const period = searchParams.get('period') || 'monthly' // "monthly" or "yearly"
+
+    // Determine date range based on period
+    let startDate: string
+    let endDate: string
+    let periodDisplay: string
+
+    if (period === 'yearly' || !month) {
+      // Yearly period
+      startDate = `${year}-01-01`
+      endDate = `${year}-12-31`
+      periodDisplay = `For the year ${year}`
+    } else {
+      // Monthly period
+      const monthNum = parseInt(month, 10)
+      if (monthNum < 1 || monthNum > 12) {
+        return errorResponse('Invalid month. Must be between 01 and 12', 400)
+      }
+
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ]
+
+      const lastDay = new Date(parseInt(year), monthNum, 0).getDate()
+      startDate = `${year}-${month}-01`
+      endDate = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`
+      periodDisplay = `For the month of ${monthNames[monthNum - 1]} ${year}`
+    }
 
     const { data: transactions, error: dbError } = await (supabase
       .from('transactions') as any)
       .select('*')
-      .gte('date', `${year}-01-01`)
-      .lte('date', `${year}-12-31`)
+      .gte('date', startDate)
+      .lte('date', endDate)
 
     if (dbError) {
       console.error('Database error:', dbError)
@@ -26,38 +57,41 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate income statement
-    let revenue = 0          // EARN
-    let variableCosts = 0    // VAR
+    let serviceRevenue = 0   // EARN
+    let variableCost = 0     // VAR
     let operatingExpenses = 0 // OPEX
-    let taxes = 0            // TAX
 
     transactions?.forEach((t: any) => {
-      if (t.category === 'EARN') revenue += t.income
-      else if (t.category === 'VAR') variableCosts += t.expense
+      if (t.category === 'EARN') serviceRevenue += t.income
+      else if (t.category === 'VAR') variableCost += t.expense
       else if (t.category === 'OPEX') operatingExpenses += t.expense
-      else if (t.category === 'TAX') taxes += t.expense
     })
 
-    const grossProfit = revenue - variableCosts
-    const operatingProfit = grossProfit - operatingExpenses
-    const netProfit = operatingProfit - taxes
+    // Calculations per specification
+    const grossProfit = serviceRevenue - variableCost
+    const netProfit = grossProfit - operatingExpenses
 
-    const grossMargin = revenue > 0 ? ((grossProfit / revenue) * 100).toFixed(2) : '0.00'
-    const operatingMargin = revenue > 0 ? ((operatingProfit / revenue) * 100).toFixed(2) : '0.00'
-    const netMargin = revenue > 0 ? ((netProfit / revenue) * 100).toFixed(2) : '0.00'
+    // Margins (rounded to whole number)
+    const grossProfitMargin = serviceRevenue > 0
+      ? Math.round((grossProfit / serviceRevenue) * 100)
+      : 0
+    const netProfitMargin = serviceRevenue > 0
+      ? Math.round((netProfit / serviceRevenue) * 100)
+      : 0
 
     return successResponse({
-      year,
-      revenue,
-      variableCosts,
-      grossProfit,
-      grossMargin: parseFloat(grossMargin),
-      operatingExpenses,
-      operatingProfit,
-      operatingMargin: parseFloat(operatingMargin),
-      taxes,
-      netProfit,
-      netMargin: parseFloat(netMargin)
+      period: {
+        month: period === 'monthly' && month ? month : null,
+        year: parseInt(year),
+        display: periodDisplay
+      },
+      service_revenue: serviceRevenue,
+      variable_cost: variableCost,
+      gross_profit: grossProfit,
+      gross_profit_margin: grossProfitMargin,
+      operating_expenses: operatingExpenses,
+      net_profit: netProfit,
+      net_profit_margin: netProfitMargin
     })
   } catch (error: any) {
     console.error('API Error GET /api/reports/income-statement:', error)
