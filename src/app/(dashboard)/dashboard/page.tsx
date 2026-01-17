@@ -6,20 +6,34 @@ import { Transaction } from '@/types'
 import { calculateDashboardStats } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { isSupabaseConfigured } from '@/lib/supabase/client'
+import { useLoadingTimeout } from '@/hooks/useInfiniteLoopDetection'
 
 export default function DashboardPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [supabaseConfigured, setSupabaseConfigured] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const supabase = createClient()
+
+  // Deteksi jika loading terlalu lama (timeout 30 detik)
+  const hasTimedOut = useLoadingTimeout(loading, {
+    timeout: 30000,
+    onTimeout: () => {
+      setError('Loading terlalu lama. Halaman mungkin mengalami infinite loop atau koneksi bermasalah.')
+      setLoading(false)
+    }
+  })
 
   // Fetch transactions from Supabase
   useEffect(() => {
     let isMounted = true
+    const controller = new AbortController()
 
     const fetchTransactions = async () => {
       try {
+        setError(null) // Reset error state
+
         // Check if Supabase is configured
         const configured = isSupabaseConfigured()
 
@@ -36,23 +50,49 @@ export default function DashboardPage() {
           return
         }
 
-        const { data, error } = await (supabase
+        // Timeout promise untuk mencegah request hang
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Request timeout setelah 25 detik')), 25000)
+        })
+
+        // Race antara fetch dan timeout
+        const fetchPromise = (supabase
           .from('transactions') as any)
           .select('*')
           .order('date', { ascending: false })
 
-        if (error) throw error
+        const { data, error: fetchError } = await Promise.race([
+          fetchPromise,
+          timeoutPromise
+        ]) as any
+
+        // Cek jika component sudah unmounted atau request di-abort
+        if (!isMounted || controller.signal.aborted) {
+          return
+        }
+
+        if (fetchError) throw fetchError
 
         if (isMounted) {
           setTransactions(data || [])
+          setError(null)
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching transactions:', error)
-        if (isMounted) {
+        if (isMounted && !controller.signal.aborted) {
           setTransactions([])
+
+          // Set pesan error yang user-friendly
+          if (error.message?.includes('timeout')) {
+            setError('Koneksi terlalu lama. Silakan coba refresh halaman.')
+          } else if (error.message?.includes('network')) {
+            setError('Gagal terhubung ke server. Periksa koneksi internet Anda.')
+          } else {
+            setError(`Terjadi kesalahan: ${error.message}`)
+          }
         }
       } finally {
-        if (isMounted) {
+        if (isMounted && !controller.signal.aborted) {
           setLoading(false)
         }
       }
@@ -63,10 +103,60 @@ export default function DashboardPage() {
     // Cleanup function to prevent state updates on unmounted component
     return () => {
       isMounted = false
+      controller.abort() // Batalkan request jika component unmount
     }
   }, []) // Empty dependency array - run once on mount
 
   const stats = calculateDashboardStats(transactions)
+
+  // Tampilkan error jika ada
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 max-w-2xl">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-red-900">Terjadi Kesalahan</h2>
+              <p className="text-red-700 text-sm mt-1">{error}</p>
+            </div>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+            <h3 className="font-semibold text-amber-900 mb-2">🔄 Kemungkinan Penyebab:</h3>
+            <ul className="text-amber-800 text-sm space-y-1 list-disc list-inside">
+              <li>Koneksi internet terputus atau lambat</li>
+              <li>Server database tidak merespons</li>
+              <li>Request timeout (lebih dari 25 detik)</li>
+              <li>Terjadi infinite loop pada proses loading</li>
+            </ul>
+          </div>
+
+          <div className="space-y-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh Halaman
+            </button>
+            <button
+              onClick={() => setError(null)}
+              className="w-full bg-white hover:bg-slate-50 text-slate-700 font-semibold py-3 px-4 rounded-xl border-2 border-slate-200 transition-colors"
+            >
+              Tutup Pesan Error
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
@@ -74,6 +164,9 @@ export default function DashboardPage() {
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-600 font-semibold">Loading...</p>
+          <p className="text-slate-500 text-sm mt-2">
+            Jika loading terlalu lama, halaman akan otomatis menampilkan error
+          </p>
         </div>
       </div>
     )
