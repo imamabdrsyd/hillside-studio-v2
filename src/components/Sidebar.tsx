@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { RoleBadge } from './auth/RoleBadge'
 import { canViewTransactions } from '@/types/auth'
@@ -34,6 +35,7 @@ const iconMap = {
 
 export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }: SidebarProps) {
   const { user, profile, signOut } = useAuth()
+  const router = useRouter()
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', group: 'Overview' },
@@ -92,7 +94,14 @@ export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }: Sid
         lg:translate-x-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-      <div className="flex items-center gap-3 mb-8">
+      {/* Logo - Clickable to Dashboard */}
+      <button
+        onClick={() => {
+          router.push('/dashboard')
+          onClose() // Close mobile menu
+        }}
+        className="flex items-center gap-3 mb-8 w-full hover:opacity-80 transition-opacity"
+      >
         <div className="w-11 h-11 flex items-center justify-center">
           <Image
             src="/picture/hillside-silhouette.png"
@@ -103,11 +112,11 @@ export default function Sidebar({ activeTab, onTabChange, isOpen, onClose }: Sid
             priority
           />
         </div>
-        <div>
+        <div className="text-left">
           <h1 className="text-lg font-bold text-slate-800">Hillside Studio</h1>
           <p className="text-[10px] text-slate-400 font-medium">Finance Management v2</p>
         </div>
-      </div>
+      </button>
 
       <nav className="flex-1 space-y-1 overflow-y-auto">
         {groups.map((group, index) => {

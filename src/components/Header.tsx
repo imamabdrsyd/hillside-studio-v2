@@ -48,8 +48,11 @@ export default function Header({ onSearch, onExportPDF, onMenuToggle }: HeaderPr
     <header className="bg-white/80 backdrop-blur-lg border-b border-slate-200 px-4 lg:px-8 py-4 flex items-center justify-between sticky top-0 z-40">
       {/* Left side: Logo + Hamburger + Search */}
       <div className="flex items-center gap-3 flex-1">
-        {/* Logo (Mobile only) */}
-        <div className="flex items-center gap-2 lg:hidden">
+        {/* Logo (Mobile only) - Clickable */}
+        <button
+          onClick={() => router.push('/dashboard')}
+          className="flex items-center gap-2 lg:hidden hover:opacity-80 transition-opacity"
+        >
           <Image
             src="/picture/hillside-logo.png"
             alt="Hillside Studio"
@@ -61,7 +64,7 @@ export default function Header({ onSearch, onExportPDF, onMenuToggle }: HeaderPr
           <span className="hidden md:block font-bold text-slate-700 text-sm">
             Hillside Studio
           </span>
-        </div>
+        </button>
 
         {/* Hamburger Menu Button (Mobile only) */}
         <button
