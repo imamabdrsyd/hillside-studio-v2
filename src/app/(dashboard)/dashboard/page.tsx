@@ -28,7 +28,7 @@ export default function DashboardPage() {
   // Fetch transactions from Supabase
   useEffect(() => {
     let isMounted = true
-    const controller = new AbortController()
+    let timeoutId: NodeJS.Timeout | null = null
 
     const fetchTransactions = async () => {
       try {
@@ -50,24 +50,30 @@ export default function DashboardPage() {
           return
         }
 
-        // Timeout promise untuk mencegah request hang
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Request timeout setelah 25 detik')), 25000)
-        })
+        // Set timeout manual untuk deteksi request yang terlalu lama
+        let hasTimedOut = false
+        timeoutId = setTimeout(() => {
+          hasTimedOut = true
+          if (isMounted) {
+            setError('Koneksi terlalu lama. Silakan coba refresh halaman.')
+            setLoading(false)
+          }
+        }, 25000) // 25 detik timeout
 
-        // Race antara fetch dan timeout
-        const fetchPromise = (supabase
+        // Fetch dari Supabase
+        const { data, error: fetchError } = await (supabase
           .from('transactions') as any)
           .select('*')
           .order('date', { ascending: false })
 
-        const { data, error: fetchError } = await Promise.race([
-          fetchPromise,
-          timeoutPromise
-        ]) as any
+        // Clear timeout jika request selesai
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+          timeoutId = null
+        }
 
-        // Cek jika component sudah unmounted atau request di-abort
-        if (!isMounted || controller.signal.aborted) {
+        // Jika sudah timeout atau component unmounted, jangan update state
+        if (hasTimedOut || !isMounted) {
           return
         }
 
@@ -79,20 +85,34 @@ export default function DashboardPage() {
         }
       } catch (error: any) {
         console.error('Error fetching transactions:', error)
-        if (isMounted && !controller.signal.aborted) {
+
+        // Clear timeout jika ada error
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+          timeoutId = null
+        }
+
+        // Ignore AbortError (terjadi saat component unmount)
+        if (error.name === 'AbortError') {
+          return
+        }
+
+        if (isMounted) {
           setTransactions([])
 
           // Set pesan error yang user-friendly
           if (error.message?.includes('timeout')) {
             setError('Koneksi terlalu lama. Silakan coba refresh halaman.')
-          } else if (error.message?.includes('network')) {
+          } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
             setError('Gagal terhubung ke server. Periksa koneksi internet Anda.')
+          } else if (error.message?.includes('JWT') || error.message?.includes('auth')) {
+            setError('Sesi Anda telah berakhir. Silakan login kembali.')
           } else {
             setError(`Terjadi kesalahan: ${error.message}`)
           }
         }
       } finally {
-        if (isMounted && !controller.signal.aborted) {
+        if (isMounted) {
           setLoading(false)
         }
       }
@@ -103,7 +123,10 @@ export default function DashboardPage() {
     // Cleanup function to prevent state updates on unmounted component
     return () => {
       isMounted = false
-      controller.abort() // Batalkan request jika component unmount
+      // Clear timeout jika component unmount
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
     }
   }, []) // Empty dependency array - run once on mount
 
