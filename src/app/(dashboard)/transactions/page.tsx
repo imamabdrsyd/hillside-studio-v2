@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Transactions from '@/components/Transactions'
 import { Transaction } from '@/types'
 import { createClient } from '@/lib/supabase/client'
@@ -11,7 +11,8 @@ export default function TransactionsPage() {
   const [loading, setLoading] = useState(true)
   const [supabaseConfigured, setSupabaseConfigured] = useState(false)
 
-  const supabase = createClient()
+  // Memoize supabase client agar tidak di-recreate setiap render
+  const supabase = useMemo(() => createClient(), [])
 
   // Fetch transactions from Supabase
   useEffect(() => {
