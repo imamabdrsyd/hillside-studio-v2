@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import { User as SupabaseUser } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import {
@@ -52,8 +52,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initialized: false,
   })
 
-  // Inisialisasi Supabase client untuk operasi auth
-  const supabase = createClient()
+  // Memoize Supabase client agar tidak di-recreate setiap render
+  const supabase = useMemo(() => createClient(), [])
 
   /**
    * fetchProfile - Mengambil data profil user dari tabel 'profiles' di database.
