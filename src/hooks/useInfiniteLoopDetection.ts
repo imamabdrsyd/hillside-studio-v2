@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 /**
  * Hook untuk mendeteksi infinite loop pada component
@@ -64,6 +64,9 @@ export function useInfiniteLoopDetection(
 /**
  * Hook untuk membatasi jumlah loading state
  * Mencegah loading yang tidak pernah selesai
+ *
+ * PENTING: Menggunakan ref untuk callback agar tidak menyebabkan infinite loop
+ * ketika onTimeout diteruskan sebagai inline function
  */
 export function useLoadingTimeout(
   isLoading: boolean,
@@ -76,13 +79,22 @@ export function useLoadingTimeout(
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const hasTimedOut = useRef(false);
 
+  // Gunakan ref untuk menyimpan callback terbaru
+  // Ini mencegah infinite loop ketika onTimeout adalah inline function
+  const onTimeoutRef = useRef(onTimeout);
+
+  // Update ref setiap kali onTimeout berubah
+  useEffect(() => {
+    onTimeoutRef.current = onTimeout;
+  }, [onTimeout]);
+
   useEffect(() => {
     if (isLoading) {
       hasTimedOut.current = false;
 
       // Set timer untuk timeout
       timerRef.current = setTimeout(() => {
-        if (isLoading && !hasTimedOut.current) {
+        if (!hasTimedOut.current) {
           hasTimedOut.current = true;
           console.error(
             `⚠️ LOADING TIMEOUT!\n` +
@@ -90,8 +102,9 @@ export function useLoadingTimeout(
             `Kemungkinan terjadi infinite loop atau request yang hang.`
           );
 
-          if (onTimeout) {
-            onTimeout();
+          // Panggil callback dari ref (bukan dari closure)
+          if (onTimeoutRef.current) {
+            onTimeoutRef.current();
           }
         }
       }, timeout);
@@ -109,7 +122,7 @@ export function useLoadingTimeout(
         clearTimeout(timerRef.current);
       }
     };
-  }, [isLoading, timeout, onTimeout]);
+  }, [isLoading, timeout]); // PENTING: onTimeout TIDAK termasuk dalam dependency array
 
   return hasTimedOut.current;
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import Dashboard from '@/components/Dashboard'
 import { Transaction } from '@/types'
 import { calculateDashboardStats } from '@/lib/utils'
@@ -14,15 +14,19 @@ export default function DashboardPage() {
   const [supabaseConfigured, setSupabaseConfigured] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const supabase = createClient()
+  // Memoize supabase client agar tidak di-recreate setiap render
+  const supabase = useMemo(() => createClient(), [])
+
+  // Memoize timeout handler untuk optimasi (meskipun hook sudah menggunakan ref)
+  const handleLoadingTimeout = useCallback(() => {
+    setError('Loading terlalu lama. Halaman mungkin mengalami infinite loop atau koneksi bermasalah.')
+    setLoading(false)
+  }, [])
 
   // Deteksi jika loading terlalu lama (timeout 30 detik)
   const hasTimedOut = useLoadingTimeout(loading, {
     timeout: 30000,
-    onTimeout: () => {
-      setError('Loading terlalu lama. Halaman mungkin mengalami infinite loop atau koneksi bermasalah.')
-      setLoading(false)
-    }
+    onTimeout: handleLoadingTimeout
   })
 
   // Fetch transactions from Supabase
