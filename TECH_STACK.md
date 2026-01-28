@@ -151,7 +151,7 @@ src/
 | Layer | Tech |
 |----------|-----------------|
 | **UI Styling** | Tailwind CSS, Lucide React, Plus Jakarta Sans |
-| **Frontend** | Next.js 14, React 18, TypeScript |
+| **Frontend** | Next.js 16, React 18, TypeScript |
 | **Backend** | Next.js API Routes, Supabase |
 | **Auth** | Supabase Auth |
 | **Database** | PostgreSQL, AWS |
